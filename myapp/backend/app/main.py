@@ -1,19 +1,28 @@
-from fastapi import FastAPI, HTTPException, Depends, Cookie
+from fastapi import FastAPI, HTTPException, Depends, Cookie, Body
 from fastapi.middleware.cors import CORSMiddleware
 import psycopg2
 import os
 import datetime
-from typing import Dict, Any
+import uuid
+import bcrypt
+from pydantic import BaseModel, EmailStr
+from typing import Dict, Any, Optional
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[os.getenv("FRONTEND_URL", "http://localhost:3000")],
+    allow_origins=[os.getenv("FRONTEND_URL", "http://localhost:3001")],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["*"],
 )
+
+# Models
+class UserCreate(BaseModel):
+    email: EmailStr
+    password: str
+    name: Optional[str] = None
 
 @app.get("/health")
 def health():
@@ -60,3 +69,27 @@ def protected_route(user: Dict[str, Any] = Depends(get_current_user)):
         "user_id": user["id"],
         "email": user["email"]
     }
+
+@app.get("/api/user")
+def get_user(user: Dict[str, Any] = Depends(get_current_user)):
+    conn = psycopg2.connect(os.getenv("DATABASE_URL"))
+    cur = conn.cursor()
+    
+    try:
+        cur.execute("SELECT id, email, name, email_verified FROM users WHERE id=%s", (user["id"],))
+        user_data = cur.fetchone()
+        
+        if not user_data:
+            raise HTTPException(404, "User not found")
+            
+        return {
+            "id": user_data[0],
+            "email": user_data[1],
+            "name": user_data[2],
+            "email_verified": user_data[3]
+        }
+    except Exception as e:
+        raise HTTPException(500, f"Database error: {str(e)}")
+    finally:
+        cur.close()
+        conn.close()
