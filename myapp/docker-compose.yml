@@ -24,7 +24,7 @@ services:
 
   frontend:
     build: ./frontend
-    ports: ["3000:3000"]
+    ports: ["3001:80"]
     depends_on: [auth-service, backend]
 
 volumes: { db-data: {} }
