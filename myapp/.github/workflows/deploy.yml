@@ -1,0 +1,48 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure ACR Login
+        uses: azure/docker-login@v1
+        with:
+          login-server: myregistry.azurecr.io
+          username: ${{ secrets.ACR_USER }}
+          password: ${{ secrets.ACR_PASS }}
+
+      # Build & push images
+      - uses: docker/build-push-action@v4
+        with:
+          context: ./backend
+          push: true
+          tags: myregistry.azurecr.io/myapp-backend:${{ github.sha }}
+      
+      - uses: docker/build-push-action@v4
+        with:
+          context: ./auth-service
+          push: true
+          tags: myregistry.azurecr.io/betterauth:${{ github.sha }}
+      
+      - uses: docker/build-push-action@v4
+        with:
+          context: ./frontend
+          push: true
+          tags: myregistry.azurecr.io/myapp-frontend:${{ github.sha }}
+
+      # Deploy to Azure
+      - uses: azure/webapps-deploy@v2
+        with:
+          app-name: myapp-multicontainer
+          slot-name: Production
+          images: |
+            myregistry.azurecr.io/betterauth:${{ github.sha }}
+            myregistry.azurecr.io/myapp-backend:${{ github.sha }}
+            myregistry.azurecr.io/myapp-frontend:${{ github.sha }}
+          publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE }}

@@ -1,0 +1,13 @@
+version: '3.8'
+services:
+  betterauth:
+    image: myregistry.azurecr.io/betterauth:latest
+    env_file: .env.prod
+    
+  api:
+    image: myregistry.azurecr.io/myapp-backend:latest
+    env_file: .env.prod
+    depends_on: [betterauth]
+    
+  frontend:
+    image: myregistry.azurecr.io/myapp-frontend:latest
