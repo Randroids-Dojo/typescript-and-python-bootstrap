@@ -1,3 +1,4 @@
+version: '3.8'
 services:
   db:
     image: postgres:15-alpine
@@ -5,26 +6,49 @@ services:
       POSTGRES_USER: devuser
       POSTGRES_PASSWORD: devpass
       POSTGRES_DB: myapp_dev
-    volumes: [ db-data:/var/lib/postgresql/data ]
+    volumes: 
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
 
   redis:
     image: redis:7-alpine
+    ports:
+      - "6379:6379"
 
   auth-service:
     build: ./auth-service
     env_file: .env
-    ports: ["4000:4000"]
-    depends_on: [db]
+    ports: 
+      - "4000:4000"
+    depends_on: 
+      - db
 
   backend:
     build: ./backend
     env_file: .env
-    ports: ["8001:8000"]
-    depends_on: [db, redis, auth-service]
+    ports: 
+      - "8001:8000"  # host:container
+    depends_on: 
+      - db
+      - redis
+      - auth-service
+    volumes:
+      - ./backend:/app  # For development hot reload
 
   frontend:
-    build: ./frontend
-    ports: ["3001:80"]
-    depends_on: [auth-service, backend]
+    build: 
+      context: ./frontend
+      target: development
+    env_file: .env
+    ports: 
+      - "3001:5173"  # host:container (Vite uses 5173 by default)
+    depends_on: 
+      - auth-service
+      - backend
+    volumes:
+      - ./frontend:/app  # For development hot reload
+      - /app/node_modules
 
-volumes: { db-data: {} }
+volumes:
+  db-data:

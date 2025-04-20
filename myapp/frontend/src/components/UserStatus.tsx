@@ -1,77 +1,27 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-
-interface User {
-  id: string;
-  email: string;
-  name?: string;
-}
+import React from 'react';
+import { useSession } from 'better-auth/client';
+import { Link } from 'react-router-dom';
 
 const UserStatus: React.FC = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: session, isLoading, signOut } = useSession();
 
-  useEffect(() => {
-    const checkAuthStatus = async () => {
-      try {
-        setLoading(true);
-        // Try to get user data from our backend API
-        const backendUrl = process.env.REACT_APP_API_URL || 'http://localhost:8001';
-        const { data } = await axios.get(`${backendUrl}/api/user`, { withCredentials: true });
-        setUser(data);
-      } catch (error) {
-        console.error('Error checking auth status:', error);
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    checkAuthStatus();
-  }, []);
-
-  const handleLogout = async () => {
-    try {
-      const authUrl = process.env.REACT_APP_AUTH_URL || 'http://localhost:4000/api/auth';
-      await axios.post(`${authUrl}/signout`, {}, { withCredentials: true });
-      setUser(null);
-      window.location.href = '/auth';
-    } catch (error) {
-      console.error('Error signing out:', error);
-    }
-  };
-
-  if (loading) {
-    return <div>Loading...</div>;
+  if (isLoading) {
+    return <div className="user-status-loading">Loading...</div>;
   }
 
-  if (!user) {
+  if (!session) {
     return (
-      <div>
-        <a href="/auth" style={{ textDecoration: 'none', color: '#0070f3' }}>
-          Sign In
-        </a>
+      <div className="user-status-signed-out">
+        <Link to="/auth/signIn">Sign In</Link>
+        <Link to="/auth/signUp">Register</Link>
       </div>
     );
   }
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-      <span>
-        Welcome, {user.name || user.email}
-      </span>
-      <button
-        onClick={handleLogout}
-        style={{
-          background: 'transparent',
-          color: '#0070f3',
-          border: '1px solid #0070f3',
-          padding: '4px 8px',
-          borderRadius: '4px',
-          cursor: 'pointer',
-          fontSize: '14px'
-        }}
-      >
+    <div className="user-status-signed-in">
+      <span>Hi, {session.user.email}</span>
+      <button onClick={() => signOut()} className="sign-out-button">
         Sign Out
       </button>
     </div>

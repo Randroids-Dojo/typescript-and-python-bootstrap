@@ -2,11 +2,18 @@ FROM node:18-alpine
 
 WORKDIR /app
 
+# Install dependencies
 COPY package*.json ./
-RUN npm install --production
+RUN npm install
 
+# Copy application code
 COPY . .
-RUN npm install typescript --no-save && npm run build
 
+# Build TypeScript
+RUN npm run build
+
+# Expose application port
 EXPOSE 4000
+
+# Run the application
 CMD ["node", "dist/server.js"]

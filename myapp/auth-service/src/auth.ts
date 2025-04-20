@@ -1,6 +1,8 @@
 import { betterAuth } from "better-auth";
-import pkg from "pg";
-const { Pool } = pkg;
+import { Pool } from "pg";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 export const auth = betterAuth({
   database: new Pool({ connectionString: process.env.DATABASE_URL }),
@@ -13,4 +15,5 @@ export const auth = betterAuth({
       clientSecret: process.env.BETTER_AUTH_GITHUB_CLIENT_SECRET!,
     },
   },
+  trustedOrigins: [process.env.FRONTEND_URL!],
 });
