@@ -42,8 +42,8 @@ A modern full-stack application with:
    ```
 
 5. Access the services:
-   - Frontend: http://localhost:3000
-   - API: http://localhost:8000
+   - Frontend: http://localhost:3001
+   - API: http://localhost:8001
    - Auth Service: http://localhost:4000/api/auth
 
 ## Development
