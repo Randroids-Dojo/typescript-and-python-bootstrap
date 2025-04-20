@@ -31,7 +31,10 @@ A modern full-stack application with:
    cp .env.example .env
    ```
 
-3. Edit the `.env` file to configure your environment variables, especially for GitHub OAuth if you intend to use it.
+3. Edit the `.env` file to configure your environment variables. Key variables include:
+   - `DATABASE_URL`: Connection string for PostgreSQL
+   - `BETTER_AUTH_SECRET`: Secret key for the auth service
+   - `BETTER_AUTH_GITHUB_CLIENT_ID` and `BETTER_AUTH_GITHUB_CLIENT_SECRET`: For GitHub OAuth (if needed)
 
 4. Start the application using Docker Compose:
    ```bash

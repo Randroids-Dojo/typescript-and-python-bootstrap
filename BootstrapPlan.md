@@ -382,8 +382,8 @@ az webapp create -n myapp-multicontainer -g myapp-rg -p myapp-plan --multicontai
 az keyvault secret set --vault-name myapp-kv --name BETTER_AUTH_SECRET --value "$(openssl rand -base64 32)"
 az keyvault secret set --vault-name myapp-kv --name DATABASE_URL --value "postgresql://pguser:pgpass@myapp-pg.postgres.database.azure.com:5432/myapp"
 az keyvault secret set --vault-name myapp-kv --name BETTER_AUTH_URL --value "https://myapp-multicontainer.azurewebsites.net"
-az keyvault secret set --vault-name myapp-kv --name GITHUB_CLIENT_ID --value "<...>"
-az keyvault secret set --vault-name myapp-kv --name GITHUB_CLIENT_SECRET --value "<...>"
+az keyvault secret set --vault-name myapp-kv --name BETTER_AUTH_GITHUB_CLIENT_ID --value "<...>"
+az keyvault secret set --vault-name myapp-kv --name BETTER_AUTH_GITHUB_CLIENT_SECRET --value "<...>"
 
 8.3 App Service Configuration
 
