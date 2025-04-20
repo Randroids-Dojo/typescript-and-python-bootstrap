@@ -1,13 +1,13 @@
-import React from "react";
-import { useSession } from "better-auth/client";
-import { Navigate } from "react-router-dom";
+import { Navigate } from 'react-router-dom';
+import { authClient } from '../lib/auth-client';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { data: session, isLoading } = useSession();
+  // Get session from our mock auth client
+  const { data: session, isLoading } = authClient.useSession();
   
   if (isLoading) {
     return <div>Loading...</div>;

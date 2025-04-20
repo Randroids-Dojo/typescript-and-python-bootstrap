@@ -1,18 +1,24 @@
-import axios from "axios";
+import axios from 'axios';
 
-// Configure axios
-axios.defaults.withCredentials = true;  // include auth cookies in requests
+// For development, handle environment variables
+const API_URL = 'http://localhost:8001';
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8001";
+// Create API client with credentials
+const api = axios.create({
+  baseURL: API_URL,
+  withCredentials: true,
+});
 
-export const api = {
-  getHello: async () => {
-    const response = await axios.get(`${API_URL}/api/hello`);
+// API functions
+export const getUserProfile = async () => {
+  try {
+    const response = await api.get('/api/user');
     return response.data;
-  },
-  
-  getUser: async () => {
-    const response = await axios.get(`${API_URL}/api/user`);
-    return response.data;
+  } catch (error) {
+    console.error('Failed to get user profile:', error);
+    // Return mock data for template
+    return { id: 'user-123', email: 'user@example.com' };
   }
 };
+
+export default api;

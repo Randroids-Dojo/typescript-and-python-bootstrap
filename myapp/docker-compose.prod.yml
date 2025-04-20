@@ -1,24 +1,29 @@
-version: '3.8'
 services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes: [ db-data:/var/lib/postgresql/data ]
+
+  redis:
+    image: redis:7-alpine
+
   auth-service:
-    image: ${ACR_LOGIN_SERVER}/auth-service:${IMAGE_TAG}
-    restart: always
-    environment:
-      - DATABASE_URL=${DATABASE_URL}
-      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
-      - BETTER_AUTH_URL=${BETTER_AUTH_URL}
-      - BETTER_AUTH_GITHUB_CLIENT_ID=${BETTER_AUTH_GITHUB_CLIENT_ID}
-      - BETTER_AUTH_GITHUB_CLIENT_SECRET=${BETTER_AUTH_GITHUB_CLIENT_SECRET}
-      - FRONTEND_URL=${FRONTEND_URL}
-    
+    image: myregistry.azurecr.io/betterauth:${TAG}
+    ports: ["4000:4000"]
+    depends_on: [db]
+
   backend:
-    image: ${ACR_LOGIN_SERVER}/backend:${IMAGE_TAG}
-    restart: always
-    environment:
-      - DATABASE_URL=${DATABASE_URL}
-      - REDIS_URL=${REDIS_URL}
-      - FRONTEND_URL=${FRONTEND_URL}
-    
+    image: myregistry.azurecr.io/myapp-backend:${TAG}
+    ports: ["8000:8000"]
+    depends_on: [db, redis, auth-service]
+
   frontend:
-    image: ${ACR_LOGIN_SERVER}/frontend:${IMAGE_TAG}
-    restart: always
+    image: myregistry.azurecr.io/myapp-frontend:${TAG}
+    ports: ["80:80"]
+    depends_on: [auth-service, backend]
+
+volumes:
+  db-data:

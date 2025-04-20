@@ -10,37 +10,39 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Login to Azure Container Registry
+      - name: Login to ACR
         uses: azure/docker-login@v1
         with:
-          login-server: ${{ secrets.ACR_LOGIN_SERVER }}
+          login-server: myregistry.azurecr.io
           username: ${{ secrets.ACR_USER }}
           password: ${{ secrets.ACR_PASS }}
 
-      # Build & push auth-service image
-      - name: Build and push auth-service
-        uses: docker/build-push-action@v4
+      # Build & push images with commit SHA tag
+      - uses: docker/build-push-action@v4
         with:
           context: ./auth-service
           push: true
-          tags: ${{ secrets.ACR_LOGIN_SERVER }}/auth-service:${{ github.sha }}
+          tags: myregistry.azurecr.io/betterauth:${{ github.sha }}
 
-      # Build & push backend image
-      - name: Build and push backend
-        uses: docker/build-push-action@v4
+      - uses: docker/build-push-action@v4
         with:
           context: ./backend
           push: true
-          tags: ${{ secrets.ACR_LOGIN_SERVER }}/backend:${{ github.sha }}
+          tags: myregistry.azurecr.io/myapp-backend:${{ github.sha }}
 
-      # Build & push frontend image
-      - name: Build and push frontend
-        uses: docker/build-push-action@v4
+      - uses: docker/build-push-action@v4
         with:
           context: ./frontend
-          target: production
           push: true
-          tags: ${{ secrets.ACR_LOGIN_SERVER }}/frontend:${{ github.sha }}
+          tags: myregistry.azurecr.io/myapp-frontend:${{ github.sha }}
+
+      # Run Alembic migrations
+      - name: DB migrations
+        run: |
+          docker run --rm \
+            -e DATABASE_URL=${{ secrets.DB_URL }} \
+            myregistry.azurecr.io/myapp-backend:${{ github.sha }} \
+            alembic upgrade head
 
   deploy:
     needs: build
@@ -48,37 +50,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Login to Azure
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      # Create production docker-compose.yml with the correct image tags
-      - name: Create production docker-compose.yml
-        run: |
-          cat > docker-compose.prod.yml << EOF
-          version: '3.8'
-          services:
-            auth-service:
-              image: ${{ secrets.ACR_LOGIN_SERVER }}/auth-service:${{ github.sha }}
-              restart: always
-            
-            backend:
-              image: ${{ secrets.ACR_LOGIN_SERVER }}/backend:${{ github.sha }}
-              restart: always
-            
-            frontend:
-              image: ${{ secrets.ACR_LOGIN_SERVER }}/frontend:${{ github.sha }}
-              restart: always
-          EOF
-
-      # Deploy to Azure App Service
       - name: Deploy to Azure App Service
         uses: azure/webapps-deploy@v2
         with:
-          app-name: ${{ secrets.WEBAPP_NAME }}
+          app-name: myapp-multicontainer
           slot-name: Production
           images: |
-            ${{ secrets.ACR_LOGIN_SERVER }}/auth-service:${{ github.sha }}
-            ${{ secrets.ACR_LOGIN_SERVER }}/backend:${{ github.sha }}
-            ${{ secrets.ACR_LOGIN_SERVER }}/frontend:${{ github.sha }}
+            myregistry.azurecr.io/betterauth:${{ github.sha }}
+            myregistry.azurecr.io/myapp-backend:${{ github.sha }}
+            myregistry.azurecr.io/myapp-frontend:${{ github.sha }}
+          publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE }}

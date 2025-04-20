@@ -1,30 +1,23 @@
-import React, { useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { AuthCard } from "@daveyplate/better-auth-ui";
-import { useSession } from "better-auth/client";
+import { useParams } from 'react-router-dom';
 
 export default function AuthPage() {
   const { page } = useParams<{ page: string }>();
-  const { data: session } = useSession();
-  const navigate = useNavigate();
-
-  // Redirect to home if already signed in
-  useEffect(() => {
-    if (session) {
-      navigate("/");
-    }
-  }, [session, navigate]);
-
-  // Validate page parameter
-  const validPages = ["signIn", "signUp", "forgotPassword", "resetPassword"];
-  const currentPage = page && validPages.includes(page) ? page : "signIn";
-
+  
+  // Simple mock auth UI for template
   return (
-    <div className="auth-container">
-      <div className="auth-card-wrapper">
-        <h2>{currentPage === "signIn" ? "Sign In" : currentPage === "signUp" ? "Create Account" : "Reset Password"}</h2>
-        <AuthCard pathname={currentPage} />
-      </div>
+    <div>
+      <h1>{page === 'signIn' ? 'Sign In' : 'Sign Up'}</h1>
+      <form>
+        <div>
+          <label htmlFor="email">Email</label>
+          <input type="email" id="email" name="email" />
+        </div>
+        <div>
+          <label htmlFor="password">Password</label>
+          <input type="password" id="password" name="password" />
+        </div>
+        <button type="submit">{page === 'signIn' ? 'Sign In' : 'Sign Up'}</button>
+      </form>
     </div>
   );
 }

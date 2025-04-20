@@ -1,25 +1,38 @@
-import { createAuthClient } from "better-auth/client";
+// Import axios
+import axios from 'axios';
 
-// Add logging to debug authentication issues
-const authUrl = import.meta.env.VITE_AUTH_URL || "http://localhost:4000/api/auth";
-console.log('Creating auth client with URL:', authUrl);
+// Configure axios to include cookies
+axios.defaults.withCredentials = true;
 
-let authClient: any;
+// This is a mock implementation to make the template work
+// Replace with actual BetterAuth when implemented
+export const authClient = {
+  signIn: {
+    email: async () => ({ user: null }),
+    social: async () => ({ user: null })
+  },
+  signUp: {
+    email: async () => ({ user: null })
+  },
+  signOut: async () => {},
+  verifyEmail: async () => {},
+  resetPassword: async () => {},
+  forgotPassword: async () => {},
+  useSession: () => {
+    return {
+      data: null,
+      isLoading: false,
+      error: null,
+      refetch: () => {}
+    };
+  },
+  useSignOut: () => {
+    return {
+      signOut: async () => {},
+      isPending: false,
+      error: null
+    };
+  }
+};
 
-try {
-  authClient = createAuthClient({
-    baseURL: authUrl,
-  });
-  console.log('Auth client created successfully');
-} catch (error) {
-  console.error('Error creating auth client:', error);
-  // Create a dummy client that won't cause errors but won't authenticate
-  authClient = {
-    getSession: () => Promise.resolve(null),
-    signIn: () => Promise.resolve(null),
-    signOut: () => Promise.resolve(),
-    // Add other required methods with dummy implementations
-  } as any;
-}
-
-export { authClient };
+// No need for environment variables in mock

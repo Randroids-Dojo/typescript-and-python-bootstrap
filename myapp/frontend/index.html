@@ -2,87 +2,12 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Hello World App</title>
-    <style>
-      body {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
-          Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-        margin: 0;
-        padding: 0;
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-      }
-      #root {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-      }
-      .fallback {
-        display: none;
-        padding: 2rem;
-        text-align: center;
-        margin: 0 auto;
-        max-width: 800px;
-      }
-      .fallback h1 {
-        color: #213547;
-      }
-      .fallback button {
-        background-color: #646cff;
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 16px;
-        margin-top: 20px;
-      }
-      .fallback button:hover {
-        background-color: #535bf2;
-      }
-    </style>
-    <!-- Add this script to check if the React app is loading -->
-    <script>
-      window.addEventListener('load', function() {
-        // Give React a short time to render - if nothing happens, show the fallback
-        setTimeout(function() {
-          const root = document.getElementById('root');
-          // If the root is empty after 2 seconds, show fallback
-          if (root && root.children.length === 0) {
-            const fallback = document.getElementById('fallback');
-            if (fallback) {
-              fallback.style.display = 'block';
-            }
-          }
-        }, 2000);
-      });
-      
-      function reloadPage() {
-        window.location.reload();
-      }
-    </script>
+    <title>MyApp</title>
   </head>
   <body>
     <div id="root"></div>
-    <div id="fallback" class="fallback">
-      <h1>Hello World App</h1>
-      <p>The application seems to be having trouble loading.</p>
-      <p>Please check the browser console for any errors.</p>
-      <div>
-        <button onclick="reloadPage()">Reload Page</button>
-      </div>
-      <div style="margin-top: 20px;">
-        <p>You can try accessing these endpoints directly:</p>
-        <ul style="list-style: none; padding: 0;">
-          <li><a href="http://localhost:3001">Frontend</a></li>
-          <li><a href="http://localhost:8001">Backend API</a></li>
-          <li><a href="http://localhost:4000/api/auth/signUp">Auth Service - Sign Up</a></li>
-        </ul>
-      </div>
-    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

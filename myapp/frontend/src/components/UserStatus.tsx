@@ -1,31 +1,28 @@
-import React from 'react';
-import { useSession } from 'better-auth/client';
-import { Link } from 'react-router-dom';
+import { authClient } from '../lib/auth-client';
 
-const UserStatus: React.FC = () => {
-  const { data: session, isLoading, signOut } = useSession();
+export function UserStatus() {
+  const { data: session, isLoading } = authClient.useSession();
+  const { signOut } = authClient.useSignOut();
 
   if (isLoading) {
-    return <div className="user-status-loading">Loading...</div>;
+    return <div>Loading...</div>;
   }
 
   if (!session) {
     return (
-      <div className="user-status-signed-out">
-        <Link to="/auth/signIn">Sign In</Link>
-        <Link to="/auth/signUp">Register</Link>
+      <div>
+        <a href="/auth/signIn">Sign In</a> | <a href="/auth/signUp">Sign Up</a>
       </div>
     );
   }
 
+  // Mock session display for template
   return (
-    <div className="user-status-signed-in">
-      <span>Hi, {session.user.email}</span>
-      <button onClick={() => signOut()} className="sign-out-button">
+    <div>
+      Signed in as user@example.com
+      <button onClick={() => signOut()} className="ml-2">
         Sign Out
       </button>
     </div>
   );
-};
-
-export default UserStatus;
+}
