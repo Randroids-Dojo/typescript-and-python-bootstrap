@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authClient } from '../lib/auth-client';
-import axios from 'axios';
+import api from '../utils/api';
 
 function Dashboard() {
   const { data: session } = authClient.useSession();
@@ -19,10 +19,7 @@ function Dashboard() {
     const fetchProtectedData = async () => {
       try {
         setLoading(true);
-        // Make sure to send credentials (cookies)
-        const response = await axios.get('http://localhost:8000/api/protected', {
-          withCredentials: true
-        });
+        const response = await api.get('/api/protected');
         setProtectedData(response.data);
         setError(null);
       } catch (err) {

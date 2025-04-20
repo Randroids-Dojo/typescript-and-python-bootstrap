@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authClient } from '../lib/auth-client';
-import axios from 'axios';
+import api from '../utils/api';
 
 function Profile() {
   const { data: session } = authClient.useSession();
@@ -18,9 +18,7 @@ function Profile() {
     const fetchProfile = async () => {
       try {
         setLoading(true);
-        const response = await axios.get('http://localhost:8000/profile', { 
-          withCredentials: true 
-        });
+        const response = await api.get('/profile');
         setProfile(response.data);
       } catch (err) {
         console.error('Error fetching profile:', err);
