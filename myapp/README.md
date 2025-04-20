@@ -33,8 +33,8 @@ A modern full-stack application with:
 
 3. Edit the `.env` file to configure your environment variables. Key variables include:
    - `DATABASE_URL`: Connection string for PostgreSQL
-   - `BETTER_AUTH_SECRET`: Secret key for the auth service
-   - `BETTER_AUTH_GITHUB_CLIENT_ID` and `BETTER_AUTH_GITHUB_CLIENT_SECRET`: For GitHub OAuth (if needed)
+   - `BETTER_AUTH_SECRET`: Secret key used by the BetterAuth service to sign tokens and secure sessions
+   - `BETTER_AUTH_GITHUB_CLIENT_ID` and `BETTER_AUTH_GITHUB_CLIENT_SECRET`: Credentials obtained from GitHub to enable OAuth login
 
 4. Start the application using Docker Compose:
    ```bash
