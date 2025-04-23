@@ -1,59 +1,79 @@
-# Auth Service TODO List
+# Auth Service ToDo List
 
-1. Initialize Node.js project
-   - Set up project structure
-   - Configure dependencies
-   - Set up Docker configuration (REQUIRED - all local development must use Docker Compose)
-   - Ensure proper integration with the docker-compose.yml at the root
-   - Use scripts/start.sh to launch all services together
+## Initial Setup
 
-2. Configure database connection
-   - Set up PostgreSQL connection
-   - Create user schema and migrations
-   - Implement database models
+1. Create Dockerfile and .dockerignore
+2. Initialize Node.js project
+   - Run `npm init -y`
+3. Install dependencies
+   - Express.js: `npm install express`
+   - JWT: `npm install jsonwebtoken`
+   - Body parser: `npm install body-parser`
+   - Cors: `npm install cors`
+   - Bcrypt: `npm install bcrypt`
+   - Validation: `npm install joi`
+   - Environment variables: `npm install dotenv`
+   - Development: `npm install --save-dev nodemon typescript ts-node @types/node @types/express`
+4. Create .env.example with necessary environment variables
+5. Configure TypeScript (tsconfig.json)
+6. Set up linting configuration (ESLint)
 
-3. Implement core authentication functionality
-   - User registration with email verification
-   - User login with JWT generation
-   - Password hashing implementation
-   - Token refresh mechanism
-   - Password reset flow
+## Project Structure
 
-4. Create API endpoints
-   - Register endpoint
-   - Login endpoint
-   - Token refresh endpoint
-   - Password reset endpoints
-   - User info endpoint
-   - Token validation endpoint
+1. Implement folder structure as outlined in claude.md
+2. Create basic Express application setup
+3. Configure middleware (CORS, body parsing, error handling)
 
-5. Implement security features
-   - Rate limiting
-   - Input validation and sanitization
-   - Secure HTTP headers
-   - CSRF protection
+## Authentication Endpoints
 
-6. Set up email functionality
-   - Configure email service
-   - Create email templates
-   - Implement sending verification and reset emails
+1. Implement user registration endpoint (`/api/auth/register`)
+   - Input validation
+   - Password hashing
+   - User creation
+   - Response handling
 
-7. Implement logging and monitoring
-   - Set up structured logging
-   - Implement error tracking
-   - Add security audit logging
+2. Implement user login endpoint (`/api/auth/login`)
+   - Credentials validation
+   - JWT token generation (access and refresh)
+   - Response with tokens
 
-8. Write tests
-   - Unit tests for authentication functions
-   - Integration tests for API endpoints
-   - Security testing
+3. Implement token refresh endpoint (`/api/auth/refresh`)
+   - Validate refresh token
+   - Generate new access token
+   - Handle token rotation
 
-9. Create documentation
-   - API documentation
-   - Authentication flow documentation
-   - Integration guide for other services
+4. Implement token validation endpoint (`/api/auth/validate`)
+   - Verify token signature and expiration
+   - Return token claims if valid
 
-10. Configure for production
-    - Secure environment variables
-    - Production-ready server configuration
-    - CI/CD pipeline integration
+5. Implement user profile endpoint (`/api/auth/me`)
+   - Extract user info from token
+   - Return user profile data
+
+## Security Implementation
+
+1. Implement secure password hashing with bcrypt
+2. Create JWT utilities
+   - Token generation
+   - Token verification
+   - Claims extraction
+3. Implement rate limiting
+4. Add input sanitization
+
+## Testing
+
+1. Set up testing framework (Jest)
+2. Write unit tests for authentication logic
+3. Implement integration tests for API endpoints
+
+## Docker Integration
+
+1. Ensure Dockerfile correctly builds the application
+2. Test the application running in Docker container
+3. Verify the service is accessible from other containers in Docker Compose network
+
+## Documentation
+
+1. Document all authentication endpoints
+2. Create detailed setup instructions
+3. Document integration points with frontend and backend

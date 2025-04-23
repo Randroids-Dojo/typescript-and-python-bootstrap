@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./FrontEnd
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./FrontEnd:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:8000
+      - VITE_AUTH_URL=http://localhost:4000/api/auth
+    depends_on:
+      - backend
+      - auth
+
+  backend:
+    build:
+      context: ./BackEnd
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./BackEnd:/app
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/app
+      - REDIS_URL=redis://redis:6379/0
+      - AUTH_SERVICE_URL=http://auth:4000/api/auth
+      - SECRET_KEY=development-secret-key
+    depends_on:
+      - postgres
+      - redis
+      - auth
+
+  auth:
+    build:
+      context: ./Auth
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./Auth:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - PORT=4000
+      - JWT_SECRET=development-jwt-secret
+      - JWT_ACCESS_EXPIRATION=15m
+      - JWT_REFRESH_EXPIRATION=7d
+
+  postgres:
+    image: postgres:14-alpine
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=app
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  postgres_data:
+  redis_data:

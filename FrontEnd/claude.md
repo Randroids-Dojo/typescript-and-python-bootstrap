@@ -1,52 +1,83 @@
-# FrontEnd Agent Instructions
+# FrontEnd Service Agent Instructions
 
-You are the agent responsible for the React TypeScript frontend of this project. Your primary technologies are:
+## Overview
 
-- React for UI components
-- TypeScript for type safety
-- Vite for build tooling
-- shadcn components for UI design
+You are the agent responsible for developing the Frontend service of this application. This is a React TypeScript frontend using Vite as the build tool and shadcn components for the UI.
 
-## Responsibilities
+## Key Technologies
 
-- Implement the user interface according to project requirements
-- Integrate with the backend API
-- Implement authentication flows using the Auth service
-- Ensure responsive design and good user experience
-- Write tests for components and functionality
-- Maintain high code quality and adherence to best practices
+- **React**: JavaScript library for building user interfaces
+- **TypeScript**: Typed superset of JavaScript
+- **Vite**: Next-generation frontend build tool
+- **shadcn/ui**: High-quality React components built with Radix UI and Tailwind CSS
+- **Docker/Docker Compose**: For containerized development
 
 ## Development Guidelines
 
-- All development MUST be done using Docker Compose with containers for local development, NOT by running services directly on the local machine
-- Use the provided scripts/start.sh to launch all services together locally
-- Follow React best practices and hooks-based approach
-- Use TypeScript properly with comprehensive type definitions
-- Create reusable components when possible
+### Docker-First Development
+
+- **CRITICAL**: All development MUST be done using Docker Compose
+- Never run services directly on the local machine
+- The frontend service will be available at http://localhost:3000
+- Use the provided `scripts/start.sh` at the project root to launch all services together
+
+### Service Integration
+
+- Backend API Integration: http://localhost:8000
+- Auth Service Integration: http://localhost:4000/api/auth
+  - Implement authentication flows using the BetterAuth service
+  - Store JWTs securely and handle token refresh
+
+### Code Quality Standards
+
+- Follow TypeScript best practices with proper typing
+- Ensure responsive design works across devices
 - Implement proper error handling and loading states
-- Use environment variables for configuration
-- Document your code and components
-- Write unit and integration tests
+- Write unit and integration tests for components
+- Follow the established project structure
 
-## Project Structure
+### Folder Structure
 
-The frontend should follow a standard React project structure:
+Follow this recommended structure for the frontend:
 
 ```
-/src
-  /assets - Static assets like images, fonts, etc.
-  /components - Reusable UI components
-  /context - React context providers
-  /hooks - Custom React hooks
-  /pages - Page components for routing
-  /services - API service functions
-  /types - TypeScript type definitions
-  /utils - Utility functions
-  App.tsx - Main application component
-  main.tsx - Application entry point
+FrontEnd/
+├── Dockerfile
+├── src/
+│   ├── assets/          # Static assets like images
+│   ├── components/      # Reusable UI components
+│   │   ├── ui/          # shadcn components
+│   ├── context/         # React context providers
+│   ├── hooks/           # Custom React hooks
+│   ├── lib/             # Utility functions
+│   ├── pages/           # Page components
+│   ├── services/        # API service calls
+│   └── App.tsx          # Main application component
+├── public/              # Public assets
+├── tests/               # Test files
+├── .env.example         # Example environment variables
+├── package.json         # Dependencies and scripts
+├── tsconfig.json        # TypeScript configuration
+└── vite.config.ts       # Vite configuration
 ```
 
-## Integration Points
+## Environment Variables
 
-- Backend API: Connect to endpoints at `http://localhost:8000` in development
-- Auth Service: Use endpoints at `http://localhost:4000/api/auth` for authentication
+Ensure you create a `.env` file based on `.env.example` with these variables:
+
+```
+VITE_API_URL=http://localhost:8000
+VITE_AUTH_URL=http://localhost:4000/api/auth
+```
+
+## Docker Configuration
+
+The Dockerfile should:
+- Use Node 18 or newer
+- Install dependencies
+- Build for production when appropriate
+- Expose port 3000
+
+Make sure the Docker configuration works within the Docker Compose setup at the project root.
+
+## Refer to the todo.txt file for your specific implementation tasks.

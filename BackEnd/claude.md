@@ -1,61 +1,96 @@
-# BackEnd Agent Instructions
+# BackEnd Service Agent Instructions
 
-You are the agent responsible for the FastAPI Python backend of this project. Your primary technologies are:
+## Overview
 
-- FastAPI for the API framework
-- SQLAlchemy for database ORM
-- Pydantic for data validation
-- PostgreSQL for the database
-- Redis for caching
-- Docker for containerization
+You are the agent responsible for developing the Backend service of this application. This is a FastAPI Python backend that provides API endpoints for the frontend, interacts with PostgreSQL database via SQLAlchemy, and uses Redis for caching.
 
-## Responsibilities
+## Key Technologies
 
-- Implement RESTful API endpoints
-- Manage database schema and migrations
-- Integrate with the authentication service
-- Implement business logic
-- Ensure proper error handling and validation
-- Write tests for API endpoints and business logic
-- Maintain high code quality and security
+- **FastAPI**: Modern, high-performance Python web framework
+- **SQLAlchemy**: SQL toolkit and ORM for Python
+- **PostgreSQL**: Relational database
+- **Redis**: In-memory data structure store for caching
+- **Docker/Docker Compose**: For containerized development
 
 ## Development Guidelines
 
-- All development MUST be done using Docker Compose with containers for local development, NOT by running services directly on the local machine
-- Use the provided scripts/start.sh to launch all services together locally
-- Follow FastAPI best practices
-- Use async/await patterns for efficient handling of requests
-- Implement proper dependency injection
-- Use Pydantic models for request/response validation
-- Implement proper error handling with appropriate status codes
-- Use environment variables for configuration
-- Document all API endpoints with OpenAPI/Swagger
+### Docker-First Development
+
+- **CRITICAL**: All development MUST be done using Docker Compose
+- Never run services directly on the local machine
+- The backend service will be available at http://localhost:8000
+- Use the provided `scripts/start.sh` at the project root to launch all services together
+
+### Service Integration
+
+- Frontend Integration: Provide API endpoints for the React frontend
+- Auth Service Integration: http://localhost:4000/api/auth
+  - Validate JWTs passed from frontend
+  - Create endpoints that respect authentication requirements
+- Database: Connect to PostgreSQL at postgres:5432 (Docker service name)
+- Cache: Connect to Redis at redis:6379 (Docker service name)
+
+### Code Quality Standards
+
+- Implement proper error handling
+- Use FastAPI dependency injection pattern
+- Write Pydantic models for request/response validation
+- Document all endpoints with OpenAPI
 - Write unit and integration tests
+- Follow PEP 8 style guidelines
 
-## Project Structure
+### Folder Structure
 
-The backend should follow a modular structure:
+Follow this recommended structure for the backend:
 
 ```
-/app
-  /api
-    /endpoints - API route handlers
-    /dependencies - Dependency injection functions
-  /core - Core application functionality
-    /config.py - Configuration settings
-    /security.py - Security utilities
-  /db
-    /models - SQLAlchemy models
-    /repositories - Database access functions
-    /migrations - Alembic migrations
-  /schemas - Pydantic models for requests/responses
-  /services - Business logic services
-  /tests - Test files
-  main.py - Application entry point
+BackEnd/
+├── Dockerfile
+├── app/
+│   ├── __init__.py
+│   ├── main.py             # FastAPI application entry point
+│   ├── api/                # API endpoints
+│   │   ├── __init__.py
+│   │   ├── deps.py         # Dependencies
+│   │   └── routes/         # API route modules
+│   ├── core/               # Core functionality
+│   │   ├── __init__.py
+│   │   ├── config.py       # Application configuration
+│   │   └── security.py     # Security utilities
+│   ├── db/                 # Database models and setup
+│   │   ├── __init__.py
+│   │   ├── base.py         # Base models
+│   │   └── models/         # Database models
+│   ├── schemas/            # Pydantic models
+│   │   └── __init__.py
+│   └── services/           # Business logic
+│       └── __init__.py
+├── tests/                  # Test files
+├── migrations/             # Alembic migrations
+├── .env.example            # Example environment variables
+├── requirements.txt        # Python dependencies
+└── pytest.ini             # Pytest configuration
 ```
 
-## Integration Points
+## Environment Variables
 
-- Database: Connect to PostgreSQL at `postgresql://user:password@postgres:5432/db` in development
-- Cache: Connect to Redis at `redis://redis:6379` in development
-- Auth Service: Validate tokens from the Auth service using its public endpoints
+Ensure you create a `.env` file based on `.env.example` with these variables:
+
+```
+DATABASE_URL=postgresql://postgres:postgres@postgres:5432/app
+REDIS_URL=redis://redis:6379/0
+AUTH_SERVICE_URL=http://auth:4000/api/auth
+SECRET_KEY=your-secret-key
+```
+
+## Docker Configuration
+
+The Dockerfile should:
+- Use Python 3.9 or newer
+- Install dependencies
+- Expose port 8000
+- Configure for FastAPI with Uvicorn
+
+Make sure the Docker configuration works within the Docker Compose setup at the project root.
+
+## Refer to the todo.txt file for your specific implementation tasks.

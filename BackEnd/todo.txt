@@ -1,50 +1,69 @@
-# BackEnd TODO List
+# BackEnd ToDo List
 
-1. Initialize FastAPI project
-   - Set up project structure
-   - Configure dependencies
-   - Set up Docker configuration (REQUIRED - all local development must use Docker Compose)
-   - Ensure proper integration with the docker-compose.yml at the root
-   - Use scripts/start.sh to launch all services together
+## Initial Setup
 
-2. Configure database connections
-   - Set up SQLAlchemy
-   - Create base models
-   - Configure Alembic for migrations
+1. Create Dockerfile and .dockerignore
+2. Initialize FastAPI project structure
+3. Create requirements.txt with all dependencies
+   - fastapi
+   - uvicorn
+   - sqlalchemy
+   - alembic
+   - psycopg2-binary
+   - redis
+   - python-jose (for JWT validation)
+   - passlib (for password hashing)
+   - pydantic
+   - pytest
+4. Create .env.example with necessary environment variables
+5. Set up linting configuration (flake8, black, isort)
 
-3. Implement core database models
-   - User model (synchronized with Auth service)
-   - Any application-specific models
+## Database Setup
 
-4. Configure authentication middleware
-   - JWT validation
-   - User authorization
-   - Role-based access control
+1. Create SQLAlchemy database models
+2. Set up Alembic for migrations
+3. Create initial migration
+4. Implement database connection and session management
+5. Set up Redis connection for caching
 
-5. Implement API endpoints
-   - User operations (get profile, update profile, etc.)
-   - Application-specific endpoints
-   - Health check endpoint
+## API Endpoints
 
-6. Set up Redis caching
-   - Configure Redis connection
-   - Implement caching for appropriate endpoints
+1. Create API router structure
+2. Implement CRUD operations for main resources
+3. Add pagination, filtering, and sorting
+4. Implement proper error handling
+5. Document all endpoints with OpenAPI
 
-7. Implement error handling
-   - Custom exception handlers
-   - Proper HTTP status codes
-   - Informative error messages
+## Authentication & Authorization
 
-8. Write tests
-   - Unit tests for services and utilities
-   - Integration tests for API endpoints
+1. Implement JWT validation middleware
+   - Verify tokens against Auth service
+   - Extract and validate claims
+2. Create role-based access control
+3. Implement proper error responses for auth failures
 
-9. Configure for production
-   - Security headers
-   - Rate limiting
-   - Logging
+## Business Logic
 
-10. Set up documentation
-    - Configure OpenAPI/Swagger
-    - Add request/response examples
-    - Document authentication flows
+1. Implement service layer for business logic
+2. Add caching strategy using Redis
+3. Implement background tasks for async operations
+
+## Testing
+
+1. Set up pytest configuration
+2. Create test database fixtures
+3. Write unit tests for core functionality
+4. Implement integration tests for API endpoints
+
+## Docker Integration
+
+1. Ensure Dockerfile correctly builds the application
+2. Test the application running in Docker container
+3. Verify connection to PostgreSQL and Redis within Docker Compose network
+4. Test integration with Auth service in Docker Compose network
+
+## Documentation
+
+1. Document API endpoints with examples
+2. Create detailed setup instructions
+3. Document integration points with other services

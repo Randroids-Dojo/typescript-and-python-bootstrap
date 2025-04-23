@@ -1,52 +1,67 @@
-# FrontEnd TODO List
+# FrontEnd ToDo List
 
-1. Initialize React TypeScript project with Vite
-   - Set up project structure
-   - Configure TypeScript
-   - Install dependencies
+## Initial Setup
 
-2. Set up shadcn components
-   - Install and configure shadcn/ui
-   - Set up theming
+1. Create Dockerfile and .dockerignore
+2. Initialize React TypeScript project with Vite
+   - Use the command: `npm create vite@latest . -- --template react-ts`
+3. Set up shadcn
+   - Install and initialize shadcn/ui: `npx shadcn-ui@latest init`
+   - Configure tailwind.config.js and globals.css
+4. Create .env.example with necessary environment variables
+5. Add linting configuration (ESLint, Prettier)
 
-3. Create basic layout components
-   - Header/Navbar
-   - Footer
-   - Main content area
-   - Sidebar (if needed)
+## Project Structure
 
-4. Implement authentication UI
-   - Login form
-   - Registration form
-   - Password reset flow
-   - Auth state management
+1. Implement folder structure as outlined in claude.md
+2. Create basic layout components (header, footer, main layout)
+3. Create navigation structure
 
-5. Create API service layer
-   - Set up Axios or fetch with interceptors
-   - Create service functions for backend endpoints
-   - Handle auth tokens and refreshing
+## Core Functionality
 
-6. Implement core application pages
-   - Dashboard/Home
-   - User profile
-   - Settings
-   - Any feature-specific pages
+1. Implement authentication flow
+   - Create auth context provider
+   - Implement login page
+   - Implement registration page
+   - Add protected route wrapper
+   - Handle JWT storage and refresh
 
-7. Add responsive design
-   - Ensure UI works on mobile, tablet, and desktop
-   - Implement responsive navigation
+2. Implement user dashboard
+   - Create dashboard layout
+   - Implement profile section
+   - Add settings page
 
-8. Write tests
-   - Unit tests for components
-   - Integration tests for user flows
+3. Create API service layer
+   - Implement authentication service
+   - Create data fetching services
+   - Add interceptors for JWT handling
 
-9. Configure Docker Compose setup (REQUIRED - all local development must use Docker Compose)
-   - Create/update Dockerfile for the frontend service
-   - Ensure proper integration with the docker-compose.yml at the root
-   - Configure for local development with other services
-   - Ensure all npm commands run inside the container
-   - Use scripts/start.sh to launch all services together
+4. Implement error handling
+   - Create toast notification system
+   - Add error boundaries
+   - Implement loading states
 
-10. Implement CI/CD pipeline integration
-    - Add necessary configuration for GitHub Actions
-    - Set up build and deployment workflow
+## UI Development
+
+1. Implement responsive layout design
+2. Create form components with validation
+3. Implement dark/light theme toggle
+4. Add loading skeletons for async operations
+
+## Testing
+
+1. Set up testing framework (Vitest, React Testing Library)
+2. Write unit tests for key components
+3. Implement integration tests for major user flows
+
+## Docker Integration
+
+1. Ensure Dockerfile correctly builds and serves the application
+2. Test the application running in Docker container
+3. Verify connection to backend and auth services within Docker Compose network
+
+## Documentation
+
+1. Add component documentation
+2. Document API integration points
+3. Create README.md with setup and development instructions

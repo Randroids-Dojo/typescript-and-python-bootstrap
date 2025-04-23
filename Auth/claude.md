@@ -1,68 +1,105 @@
-# Auth Agent Instructions
+# Auth Service Agent Instructions
 
-You are the agent responsible for the BetterAuth authentication service of this project. Your primary technologies are:
+## Overview
 
-- Node.js for the runtime environment
-- Express.js for the API framework
-- JWT for token-based authentication
-- PostgreSQL for user data storage
-- Docker for containerization
+You are the agent responsible for developing the Authentication service of this application. This is a Node.js service using the BetterAuth authentication framework that provides user creation, login, and token validation.
 
-## Responsibilities
+## Key Technologies
 
-- Implement user authentication flows (registration, login, password reset)
-- Generate and validate JWT tokens
-- Manage user credentials securely
-- Implement password hashing and security best practices
-- Provide endpoints for token validation by other services
-- Maintain high security standards and proper error handling
+- **Node.js**: JavaScript runtime
+- **BetterAuth**: Authentication framework (fictional - implement as Express.js with JWT)
+- **Express.js**: Web framework for Node.js
+- **JWT**: JSON Web Tokens for authentication
+- **Docker/Docker Compose**: For containerized development
 
 ## Development Guidelines
 
-- All development MUST be done using Docker Compose with containers for local development, NOT by running services directly on the local machine
-- Use the provided scripts/start.sh to launch all services together locally
-- Follow security best practices for authentication
-- Use proper password hashing (bcrypt or Argon2)
-- Implement JWT with appropriate expiration and refresh mechanics
-- Use environment variables for sensitive configuration
-- Implement rate limiting for auth endpoints
-- Use HTTPS/TLS in production
-- Never log sensitive information
-- Write comprehensive tests for auth flows
+### Docker-First Development
 
-## Project Structure
+- **CRITICAL**: All development MUST be done using Docker Compose
+- Never run services directly on the local machine
+- The auth service will be available at http://localhost:4000/api/auth
+- Use the provided `scripts/start.sh` at the project root to launch all services together
 
-The authentication service should follow a modular structure:
+### Service Integration
+
+- Frontend Integration: Provide authentication endpoints for the React frontend
+- Backend Integration: Enable the backend to validate tokens
+
+### Authentication Endpoints
+
+Implement these core endpoints:
+
+1. **User Registration**: `/api/auth/register`
+   - Create new user accounts
+   - Validate email formats and password strength
+   - Prevent duplicate registrations
+
+2. **User Login**: `/api/auth/login`
+   - Authenticate users
+   - Issue JWT access and refresh tokens
+   - Include proper expiration times
+
+3. **Token Refresh**: `/api/auth/refresh`
+   - Issue new access tokens using refresh tokens
+   - Validate refresh token before issuing
+
+4. **Token Validation**: `/api/auth/validate`
+   - Verify that a token is valid
+   - Return token claims if valid
+
+5. **User Profile**: `/api/auth/me`
+   - Return user profile information from token
+
+### Code Quality Standards
+
+- Implement proper error handling
+- Use async/await patterns
+- Secure password hashing
+- Write unit and integration tests
+- Follow proper security practices for JWTs
+
+### Folder Structure
+
+Follow this recommended structure for the auth service:
 
 ```
-/src
-  /controllers - Route handlers
-  /middleware - Express middleware
-  /models - Database models
-  /routes - API route definitions
-  /services - Business logic services
-  /utils - Utility functions
-  /config - Configuration files
-  /tests - Test files
-  app.js - Application entry point
-  server.js - Server startup
+Auth/
+├── Dockerfile
+├── src/
+│   ├── index.js           # Application entry point
+│   ├── config/            # Configuration
+│   ├── controllers/       # Route handlers
+│   ├── middleware/        # Express middleware
+│   ├── models/            # Data models
+│   ├── routes/            # API routes
+│   ├── services/          # Business logic
+│   └── utils/             # Utility functions
+├── tests/                # Test files
+├── .env.example           # Example environment variables
+└── package.json          # Dependencies and scripts
 ```
 
-## API Endpoints
+## Environment Variables
 
-The auth service should provide the following key endpoints:
+Ensure you create a `.env` file based on `.env.example` with these variables:
 
-- POST /api/auth/register - User registration
-- POST /api/auth/login - User login
-- POST /api/auth/refresh - Refresh access token
-- POST /api/auth/forgot-password - Password reset request
-- POST /api/auth/reset-password - Password reset completion
-- GET /api/auth/me - Get current user info
-- POST /api/auth/logout - User logout
-- POST /api/auth/validate - Validate token (for internal service use)
+```
+PORT=4000
+JWT_SECRET=your-jwt-secret-key
+JWT_ACCESS_EXPIRATION=15m
+JWT_REFRESH_EXPIRATION=7d
+NODE_ENV=development
+```
 
-## Integration Points
+## Docker Configuration
 
-- Database: Connect to PostgreSQL at `postgresql://user:password@postgres:5432/auth_db` in development
-- Frontend: Provide authentication APIs to the frontend at port 4000
-- Backend: Provide token validation endpoints to the backend service
+The Dockerfile should:
+- Use Node 18 or newer
+- Install dependencies
+- Expose port 4000
+- Configure for production when appropriate
+
+Make sure the Docker configuration works within the Docker Compose setup at the project root.
+
+## Refer to the todo.txt file for your specific implementation tasks.
