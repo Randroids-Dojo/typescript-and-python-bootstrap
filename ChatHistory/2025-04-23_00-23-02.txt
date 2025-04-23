@@ -1,0 +1,26 @@
+# Chat Session: 2025-04-23_00-23-02
+
+## User
+Uncaught SyntaxError: The requested module '/src/components/ui/button.tsx' does not provide an export named 'buttonVariants'
+
+## Assistant
+Fixed error by exporting the `buttonVariants` directly from button.tsx.
+
+## User
+Uncaught SyntaxError: The requested module '/src/components/ui/form.tsx' does not provide an export named 'useFormField' (at index.ts:48:3)
+
+## Assistant
+Fixed the error by re-exporting `useFormField` directly from the form.tsx file.
+
+## User
+Uncaught SyntaxError: The requested module '/src/components/ui/form-hooks.ts' does not provide an export named 'useForm' (at index.ts:52:3)
+
+## Assistant
+Fixed the missing exports by re-exporting all the required React Hook Form hooks from form-hooks.ts.
+
+## User
+Uncaught SyntaxError: The requested module '/src/components/ui/form-context.ts' does not provide an export named 'FormProvider' (at index.ts:60:10)
+
+## Assistant
+I've added the missing FormProvider export to the form-context.ts file. Now the import in index.ts should work correctly.
+EOF < /dev/null
