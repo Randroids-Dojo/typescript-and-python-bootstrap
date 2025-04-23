@@ -7,4 +7,5 @@ Follow these steps:
 3. Review `./FrontEnd/todo.txt`, `./BackEnd/todo.txt`, `./Auth/todo.txt` with next steps for the other agents
 4. Consider what research for $ARGUMENTS would be helpful
 5. Use the web to perform the research
-6. Update `./FrontEnd/todo.txt`, `./BackEnd/todo.txt`, `./Auth/todo.txt` as needed based on your research
+6. Determine which `./FrontEnd/todo.txt`, `./BackEnd/todo.txt`, and/or `./Auth/todo.txt` needs updating based on your research
+7. Update only the todo.txt files that needs updating
