@@ -132,21 +132,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshSessions = async (): Promise<void> => {
     try {
-      // For now, mock a list of sessions since the client doesn't have this method
-      // In a real app, you would fetch this from the auth service
-      setSessions([
-        {
-          id: '1',
-          userId: user?.id || '1',
-          expiresAt: new Date(Date.now() + 86400000).toISOString(),
-          createdAt: new Date().toISOString(),
-          device: 'Current Device',
-          lastActive: new Date().toISOString(),
-          ip: '127.0.0.1'
+      // Fetch active sessions for the current user
+      try {
+        const userSessions = await authClient.getSessions();
+        setSessions(userSessions);
+      } catch (err) {
+        console.error('Error fetching sessions:', err);
+        // If we can't fetch sessions, provide at least the current session
+        if (user) {
+          setSessions([
+            {
+              id: 'current',
+              userId: user.id,
+              expiresAt: new Date(Date.now() + 86400000).toISOString(),
+              createdAt: new Date().toISOString(),
+              device: 'Current Device',
+              lastActive: new Date().toISOString(),
+              ip: '127.0.0.1'
+            }
+          ]);
+        } else {
+          setSessions([]);
         }
-      ]);
+      }
     } catch (err) {
-      console.error('Error fetching sessions:', err);
+      console.error('Error in refreshSessions:', err);
       // If we can't fetch sessions, at least ensure the array is empty
       setSessions([]);
     }
@@ -155,13 +165,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const revokeSession = async (sessionId: string): Promise<boolean> => {
     try {
       setIsLoading(true);
-      // Mock revoking a session for now
-      console.log(`Mock revoking session ${sessionId}`);
       
-      // In a real app, you would call the auth service
-      // For now, just remove it from the local state
-      setSessions(sessions.filter(session => session.id !== sessionId));
-      return true;
+      // Call the auth service to revoke the session
+      const success = await authClient.revokeSession(sessionId);
+      
+      if (success) {
+        // Update the local state to remove the revoked session
+        setSessions(sessions.filter(session => session.id !== sessionId));
+        return true;
+      }
+      
+      setError('Failed to revoke session');
+      return false;
     } catch (err) {
       console.error('Error revoking session:', err);
       setError(err instanceof Error ? err.message : 'Failed to revoke session');
@@ -171,6 +186,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Add missing methods to match the context interface
+  const resetPassword = async (email: string): Promise<boolean> => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      await authClient.resetPassword(email);
+      return true;
+    } catch (err) {
+      console.error('Password reset error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to reset password');
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const updateUser = async (userData: Partial<User>): Promise<boolean> => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const updatedUser = await authClient.updateUser(userData);
+      
+      if (updatedUser) {
+        setUser(updatedUser);
+        return true;
+      }
+      
+      setError('Failed to update user profile');
+      return false;
+    } catch (err) {
+      console.error('User update error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to update user profile');
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const validateToken = async (token: string): Promise<boolean> => {
+    try {
+      return await authClient.validateToken(token);
+    } catch (err) {
+      console.error('Token validation error:', err);
+      return false;
+    }
+  };
+  
   const contextValue: AuthContextProps = {
     user,
     isLoading,
@@ -181,7 +245,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     logout,
     sessions,
     revokeSession,
-    refreshSessions
+    refreshSessions,
+    resetPassword,
+    updateUser,
+    validateToken
   };
 
   return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;

@@ -1,7 +1,8 @@
 // Export all UI components from a single file
 // This helps fix React Fast Refresh warnings by centralizing exports
 
-export { Button, buttonVariants } from './button';
+export { Button } from './button';
+export { buttonVariants } from './button-variants';
 export type { ButtonVariantProps } from './button-variants';
 
 export {
@@ -35,6 +36,7 @@ export {
 export { Input } from './input';
 export { Label } from './label';
 export { Toaster } from './sonner';
+export { notify } from './toast-utils';
 
 export {
   Form,
@@ -45,8 +47,9 @@ export {
   FormDescription,
   FormMessage,
   FormHelperText,
-  useFormField
 } from './form';
+
+export { useFormField } from './form-hooks';
 
 export {
   useForm,

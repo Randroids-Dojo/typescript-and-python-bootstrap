@@ -1,5 +1,8 @@
+import { retry } from './utils';
+import { notify } from '@/components/ui/notify';
+
 // Configuration type for better auth client
-interface BetterAuthConfig {
+export interface BetterAuthConfig {
   baseUrl: string;
   retryConfig?: {
     maxRetries: number;
@@ -10,11 +13,37 @@ interface BetterAuthConfig {
 }
 
 // User registration data type
-interface UserRegistrationData {
+export interface UserRegistrationData {
   email: string;
   password: string;
   name: string;
   [key: string]: unknown;
+}
+
+// Interface definitions for BetterAuth client
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  permissions?: string[];
+  is_active?: boolean;
+}
+
+export interface Session {
+  id: string;
+  userId: string;
+  expiresAt: string;
+  createdAt: string;
+  device: string;
+  lastActive: string;
+  ip: string;
+}
+
+export interface AuthError {
+  code: string;
+  message: string;
+  isRetryable: boolean;
 }
 
 // BetterAuth client implementation
@@ -27,7 +56,8 @@ const betterAuth = (config: BetterAuthConfig) => {
     options: RequestInit, 
     retries = retryConfig?.maxRetries || 3
   ): Promise<T> => {
-    try {
+    // Define a function to execute with retry
+    const executeRequest = async (): Promise<T> => {
       const response = await fetch(`${baseUrl}${url}`, options);
       
       // Handle non-successful responses
@@ -35,7 +65,7 @@ const betterAuth = (config: BetterAuthConfig) => {
         const errorData = await response.json().catch(() => ({}));
         const error = new Error(errorData.message || `Request failed with status ${response.status}`);
         
-        // Add response properties to error object
+        // Add response properties to error object for better handling
         Object.assign(error, {
           response: {
             status: response.status,
@@ -44,40 +74,44 @@ const betterAuth = (config: BetterAuthConfig) => {
           }
         });
         
-        // Check if the error is retryable
-        if (
-          retries > 0 && 
-          retryConfig?.retryStatusCodes?.includes(response.status)
-        ) {
-          // Wait before retry using the configured delay
-          await new Promise(resolve => 
-            setTimeout(resolve, retryConfig?.retryDelay || 1000)
-          );
-          return apiRequest<T>(url, options, retries - 1);
-        }
-        
         throw error;
       }
       
       // Return parsed JSON or empty object if no content
       return response.status === 204 ? {} as T : await response.json() as T;
+    };
+
+    try {
+      // Use our retry utility for better error handling
+      return await retry<T>(
+        executeRequest,
+        {
+          retries: retries,
+          retryDelay: retryConfig?.retryDelay || 1000,
+          onRetry: (error, attempt) => {
+            console.warn(`Retrying auth request (attempt ${attempt})`, error);
+            if (onError) onError(error);
+          },
+          shouldRetry: (error) => {
+            // Only retry specific status codes
+            if (error && typeof error === 'object' && 'response' in error) {
+              const responseError = error.response as {status?: number};
+              return retryConfig?.retryStatusCodes?.includes(responseError.status || 0) || false;
+            }
+            
+            // Retry network errors
+            if (error instanceof TypeError && error.message.includes('fetch')) {
+              return true;
+            }
+            
+            return false;
+          }
+        }
+      );
     } catch (error) {
       // Log errors with the provided onError handler
       if (onError && error instanceof Error) {
         onError(error);
-      }
-      
-      // Retry network errors if retries available
-      if (
-        retries > 0 && 
-        error instanceof TypeError && 
-        error.message.includes('fetch')
-      ) {
-        // Wait before retry
-        await new Promise(resolve => 
-          setTimeout(resolve, retryConfig?.retryDelay || 1000)
-        );
-        return apiRequest<T>(url, options, retries - 1);
       }
       
       throw error;
@@ -176,9 +210,29 @@ const betterAuth = (config: BetterAuthConfig) => {
         );
       },
       
+      getSessions: async () => {
+        return apiRequest<Session[]>(
+          '/sessions',
+          {
+            method: 'GET',
+            credentials: 'include'
+          }
+        );
+      },
+      
+      revokeSession: async (sessionId: string) => {
+        return apiRequest<boolean>(
+          `/sessions/${sessionId}`,
+          {
+            method: 'DELETE',
+            credentials: 'include'
+          }
+        );
+      },
+      
       useSession: () => {
         // This is a client-side stub for the useSession hook
-        // The real implementation would be in a React context
+        // The real implementation is in the React context
         return {
           status: 'authenticated'
         };
@@ -187,44 +241,25 @@ const betterAuth = (config: BetterAuthConfig) => {
   };
 };
 
-// Interface definitions for BetterAuth client
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: string;
-}
-
-export interface Session {
-  id: string;
-  userId: string;
-  expiresAt: string;
-  createdAt: string;
-  device: string;
-  lastActive: string;
-  ip: string;
-}
-
-export interface AuthError {
-  code: string;
-  message: string;
-  isRetryable: boolean;
-}
-
 // Initialize the real BetterAuth client with proper error handling
 const createAuthClient = () => {
+  // Get configuration from environment variables
   const baseUrl = import.meta.env.VITE_AUTH_URL || 'http://localhost:4000/api/auth';
+  const maxRetries = parseInt(import.meta.env.VITE_AUTH_RETRY_COUNT || '3', 10);
+  const retryDelay = parseInt(import.meta.env.VITE_AUTH_RETRY_DELAY || '1000', 10);
   
   try {
+    // Create an instance of the BetterAuth client
     const authInstance = betterAuth({
       baseUrl,
       retryConfig: {
-        maxRetries: 3,
-        retryDelay: 1000,
+        maxRetries,
+        retryDelay,
         retryStatusCodes: [408, 429, 500, 502, 503, 504]
       },
       onError: (error: unknown) => {
         console.error('[Auth Service Error]', error);
+        
         // Log detailed information for troubleshooting
         if (error && typeof error === 'object' && 'response' in error && error.response) {
           const responseError = error.response as Record<string, unknown>;
@@ -237,12 +272,23 @@ const createAuthClient = () => {
         } else {
           console.error('Unknown error format:', error);
         }
+        
+        // Show a user-friendly notification for connection issues
+        if (error instanceof TypeError && error.message.includes('fetch')) {
+          notify.error(
+            'Authentication Service Unavailable',
+            'Unable to connect to the authentication service. Please try again later.'
+          );
+        }
       }
     });
     
+    // Return the client instance
     return authInstance.createClient();
+    
   } catch (error) {
     console.error('[Auth Service Initialization Error]', error);
+    
     // Return fallback client with dummy methods that will show appropriate UI messages
     return createFallbackClient();
   }
@@ -258,6 +304,13 @@ const createFallbackClient = () => {
 
   const handleOperation = async <T>(operation: string): Promise<T> => {
     console.warn(`[Auth Service Fallback] ${operation} called while auth service is unavailable`);
+    
+    // Show a notification to the user
+    notify.error(
+      'Authentication Service Unavailable',
+      'The authentication service is currently unavailable. Please try again later.'
+    );
+    
     throw createError('Authentication service is currently unavailable. Please try again later.');
   };
 
@@ -289,11 +342,18 @@ const createFallbackClient = () => {
       console.log(`Fallback user update with data: ${JSON.stringify(userData)}`);
       return handleOperation<User>('updateUser');
     },
+    getSessions: () => 
+      handleOperation<Session[]>('getSessions'),
+    revokeSession: async (sessionId: string) => {
+      console.log(`Fallback session revocation for session ID: ${sessionId}`);
+      return handleOperation<boolean>('revokeSession');
+    },
     useSession: () => ({
       status: 'unauthenticated'
     })
   };
 };
 
+// Initialize and export the auth client
 export const authClient = createAuthClient();
 export default authClient;

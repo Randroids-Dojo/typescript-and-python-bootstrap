@@ -12,6 +12,9 @@ export interface AuthContextProps {
   sessions: Session[];
   revokeSession: (sessionId: string) => Promise<boolean>;
   refreshSessions: () => Promise<void>;
+  resetPassword: (email: string) => Promise<boolean>;
+  updateUser: (userData: Partial<User>) => Promise<boolean>;
+  validateToken: (token: string) => Promise<boolean>;
 }
 
 export const AuthContext = createContext<AuthContextProps | undefined>(undefined);

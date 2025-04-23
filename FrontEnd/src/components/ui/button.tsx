@@ -24,4 +24,5 @@ function Button({
   )
 }
 
-export { Button, buttonVariants }
+// Only export the component from this file
+export { Button }

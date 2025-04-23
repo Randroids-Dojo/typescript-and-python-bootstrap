@@ -66,10 +66,45 @@ module.exports = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        "slide-down-fade": {
+          "0%": { opacity: 0, transform: "translateY(-8px)" },
+          "100%": { opacity: 1, transform: "translateY(0)" },
+        },
+        "slide-up-fade": {
+          "0%": { opacity: 0, transform: "translateY(8px)" },
+          "100%": { opacity: 1, transform: "translateY(0)" },
+        },
+        "slide-right-fade": {
+          "0%": { opacity: 0, transform: "translateX(-8px)" },
+          "100%": { opacity: 1, transform: "translateX(0)" },
+        },
+        "slide-left-fade": {
+          "0%": { opacity: 0, transform: "translateX(8px)" },
+          "100%": { opacity: 1, transform: "translateX(0)" },
+        },
+        "scale-in": {
+          "0%": { opacity: 0, transform: "scale(0.95)" },
+          "100%": { opacity: 1, transform: "scale(1)" },
+        },
+        "scale-out": {
+          "0%": { opacity: 1, transform: "scale(1)" },
+          "100%": { opacity: 0, transform: "scale(0.95)" },
+        },
+        "pulse-slow": {
+          "0%, 100%": { opacity: 1 },
+          "50%": { opacity: 0.8 },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "slideDownAndFade": "slide-down-fade 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+        "slideUpAndFade": "slide-up-fade 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+        "slideRightAndFade": "slide-right-fade 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+        "slideLeftAndFade": "slide-left-fade 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+        "scaleIn": "scale-in 0.2s ease-out",
+        "scaleOut": "scale-out 0.2s ease-in",
+        "pulseSlow": "pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
       },
     },
   },
