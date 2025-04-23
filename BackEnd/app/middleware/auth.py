@@ -1,7 +1,7 @@
 import logging
 import time
 from fastapi import Request, HTTPException, Depends
-from better_auth.exceptions import BetterAuthConnectionError, BetterAuthValidationError
+from app.auth.better_auth import BetterAuthConnectionError, BetterAuthValidationError
 from app.auth.client import auth_client
 from app.utils.redis import get_cache, set_cache
 

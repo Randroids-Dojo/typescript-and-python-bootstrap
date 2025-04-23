@@ -1,7 +1,4 @@
-from sqlalchemy.ext.declarative import declarative_base
-
-Base = declarative_base()
-
-# Import all models here so Alembic can detect them
+# Import all models here for Alembic
+from app.db.base_class import Base  # noqa
 from app.db.models.user import User  # noqa
 from app.db.models.item import Item  # noqa

@@ -16,9 +16,9 @@ services:
       - auth
 
   backend:
-    image: python:3.11-slim
-    working_dir: /app
-    command: sh -c "pip install -r requirements.txt && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+    build:
+      context: ./BackEnd
+      dockerfile: Dockerfile
     ports:
       - "8000:8000"
     volumes:
@@ -27,6 +27,8 @@ services:
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/app
       - REDIS_URL=redis://redis:6379/0
       - AUTH_SERVICE_URL=http://auth:4000/api/auth
+      - BETTER_AUTH_CLIENT_ID=backend-service
+      - BETTER_AUTH_CLIENT_SECRET=backend-service-secret
       - SECRET_KEY=development-secret-key
     depends_on:
       - postgres

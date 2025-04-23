@@ -17,7 +17,11 @@ COPY requirements.txt package.json ./
 RUN pip install --no-cache-dir -r requirements.txt && \
     pip install --no-cache-dir pytest ruff && \
     # Make sure pytest and ruff are in PATH
-    pip list
+    ln -sf /usr/local/bin/pytest /usr/bin/pytest && \
+    ln -sf /usr/local/bin/ruff /usr/bin/ruff && \
+    # Verify tools are available
+    pytest --version && \
+    ruff --version
 
 COPY . .
 

@@ -8,7 +8,7 @@ docker compose run --rm frontend npm test
 
 # Run backend tests
 echo "Running Backend tests..."
-docker compose run --rm backend npm run test
+docker compose run --rm backend python run_tests.py
 
 # Run auth tests
 echo "Running Auth tests..."

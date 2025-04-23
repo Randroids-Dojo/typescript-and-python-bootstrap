@@ -4,9 +4,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from app.core.config import settings
 from app.api.routes import api_router
-from app.db.base import Base
+from app.db.base_class import Base
 from app.db.session import engine
-from app.auth.client import auth_client
+from app.auth.client import auth_client, start_token_cleanup_task, stop_token_cleanup_task
 
 # Setup logging
 logging.basicConfig(
@@ -26,6 +26,40 @@ app = FastAPI(
     docs_url=f"{settings.API_V1_STR}/docs",
     redoc_url=f"{settings.API_V1_STR}/redoc",
     debug=settings.DEBUG,
+    contact={
+        "name": "API Support",
+        "email": "support@example.com",
+    },
+    license_info={
+        "name": "Private License",
+        "url": "https://example.com/license",
+    },
+    openapi_tags=[
+        {
+            "name": "users",
+            "description": "User management endpoints",
+            "externalDocs": {
+                "description": "User documentation",
+                "url": "https://example.com/docs/users",
+            },
+        },
+        {
+            "name": "items",
+            "description": "Item management endpoints",
+            "externalDocs": {
+                "description": "Item documentation",
+                "url": "https://example.com/docs/items",
+            },
+        },
+        {
+            "name": "auth",
+            "description": "Authentication endpoints and BetterAuth integration",
+            "externalDocs": {
+                "description": "Auth documentation",
+                "url": "https://example.com/docs/auth",
+            },
+        },
+    ],
 )
 
 # Set all CORS enabled origins
@@ -55,6 +89,30 @@ async def add_security_headers(request: Request, call_next):
 
 # Include API router
 app.include_router(api_router, prefix=settings.API_V1_STR)
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize resources on application startup"""
+    logger.info("Application starting up")
+    
+    # Start BetterAuth token cleanup task
+    try:
+        await start_token_cleanup_task()
+        logger.info("BetterAuth token cleanup task started")
+    except Exception as e:
+        logger.error(f"Failed to start BetterAuth token cleanup task: {e}")
+    
+    # Check Auth service health
+    try:
+        is_healthy = await auth_client.health_check()
+        if is_healthy:
+            logger.info("Auth service health check: OK")
+        else:
+            logger.warning("Auth service health check: DEGRADED")
+    except Exception as e:
+        logger.error(f"Auth service health check failed: {e}")
+    
+    logger.info("Application startup complete")
 
 @app.get("/")
 async def health_check():
@@ -91,8 +149,8 @@ async def detailed_health_check():
     # Check Redis connectivity
     try:
         from app.utils.redis import get_redis_connection
-        redis = get_redis_connection()
-        redis.ping()
+        redis = await get_redis_connection()
+        await redis.ping()
         health["components"]["redis"] = "healthy"
     except Exception as e:
         logger.error(f"Redis health check failed: {e}")
@@ -101,7 +159,7 @@ async def detailed_health_check():
     
     # Check Auth service connectivity
     try:
-        auth_status = auth_client.health_check()
+        auth_status = await auth_client.health_check()
         health["components"]["auth_service"] = "healthy" if auth_status else "degraded"
         if not auth_status:
             health["status"] = "degraded"
@@ -116,6 +174,13 @@ async def detailed_health_check():
 async def shutdown_event():
     """Cleanup resources on application shutdown"""
     logger.info("Application shutting down")
+    
+    # Stop BetterAuth token cleanup task
+    try:
+        await stop_token_cleanup_task()
+        logger.info("BetterAuth token cleanup task stopped")
+    except Exception as e:
+        logger.error(f"Error stopping BetterAuth token cleanup task: {e}")
     
     # Close Redis connection and cleanup BetterAuth token cache
     try:
