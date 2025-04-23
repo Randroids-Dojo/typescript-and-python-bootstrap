@@ -17,12 +17,14 @@ if __name__ == "__main__":
     try:
         if has_pytest:
             # Run pytest programmatically if available as a module
-            sys.exit(pytest.main(["-v", "tests/"]))
+            # Get args from pytest.ini instead of hardcoding them here
+            sys.exit(pytest.main())
         else:
             # Try to run pytest as a subprocess
             print("Pytest module not found, trying subprocess...")
+            # Let pytest read configuration from pytest.ini
             result = subprocess.run(
-                ["python", "-m", "pytest", "-v", "tests/"],
+                ["python", "-m", "pytest"],
                 check=False, 
                 capture_output=True, 
                 text=True

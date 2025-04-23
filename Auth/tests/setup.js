@@ -16,9 +16,12 @@ jest.mock('../src/utils/redis', () => {
   return redisMock;
 });
 
-// Close open handles after tests
-afterAll(async () => {
-  // Add any cleanup for open handles here
-  // Wait a bit to ensure processes finish
-  await new Promise(resolve => setTimeout(resolve, 100));
-});
+// Skip the afterAll for now since it's causing issues
+// We'll rely on jest's built-in cleanup mechanisms instead
+// const { afterAll } = require('@jest/globals');
+
+// afterAll(async () => {
+//   // Add any cleanup for open handles here
+//   // Wait a bit to ensure processes finish
+//   await new Promise(resolve => setTimeout(resolve, 100));
+// });

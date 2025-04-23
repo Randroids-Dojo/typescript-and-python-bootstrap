@@ -58,9 +58,13 @@ def client(db, mock_auth_client, mock_redis) -> Generator:
     # Setup dependency overrides
     app.dependency_overrides[get_db] = override_get_db
     
-    # Create TestClient without app argument - it's passed automatically
-    with TestClient(app=app) as c:
-        yield c
+    # Create TestClient - using the correct parameter based on the version
+    # First try direct instantiation
+    client = TestClient(app)
+    try:
+        yield client
+    finally:
+        client.close()
         
     # Reset all dependency overrides after test
     app.dependency_overrides = {}

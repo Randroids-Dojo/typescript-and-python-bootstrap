@@ -94,24 +94,54 @@ class BetterAuthClient:
             
         try:
             # Use an asynchronous request for health check
+            logger.info(f"Attempting health check to {self.base_url}/health with timeout {self.connection_timeout}s")
+            
             async with httpx.AsyncClient(timeout=self.connection_timeout) as client:
-                response = await client.get(f"{self.base_url}/health")
+                try:
+                    # Add more detailed debugging and exception handling
+                    logger.debug(f"Sending GET request to {self.base_url}/health")
+                    response = await client.get(f"{self.base_url}/health")
+                    logger.debug(f"Received response with status code: {response.status_code}")
+                    
+                    # Check response status and content
+                    if response.status_code == 200:
+                        # Also validate response content to ensure service is truly healthy
+                        data = response.json()
+                        logger.debug(f"Health check response: {data}")
+                        
+                        # Check if overall status is healthy
+                        if data.get("status") == "healthy":
+                            logger.info("Auth service reports healthy status")
+                            return True
+                            
+                        # Check if any specific service components are degraded
+                        if data.get("components") and data.get("components").get("auth_service") == "degraded":
+                            logger.warning("Auth service component is in degraded state")
+                            return False
+                            
+                        # Default to overall status if components aren't specified
+                        return data.get("status") == "healthy"
+                        
+                    logger.warning(f"Auth service returned non-200 status: {response.status_code}")
+                    return False
+                    
+                except httpx.ConnectError as e:
+                    logger.error(f"Connection error during health check: {e}")
+                    # Add more specific information about what might be wrong
+                    logger.error(f"Unable to connect to {self.base_url}/health - check if service is running and network is configured correctly")
+                    return False
+                    
+                except httpx.TimeoutException as e:
+                    logger.error(f"Timeout during health check: {e}")
+                    logger.error(f"Request to {self.base_url}/health timed out after {self.connection_timeout}s")
+                    return False
+                    
+                except Exception as e:
+                    logger.error(f"Health check request failed: {e}")
+                    return False
                 
-                # Check response status and content
-                if response.status_code == 200:
-                    # Also validate response content to ensure service is truly healthy
-                    data = response.json()
-                    return data.get("status") == "healthy"
-                return False
-                
-        except httpx.ConnectError as e:
-            logger.error(f"Connection error during health check: {e}")
-            return False
-        except httpx.TimeoutException as e:
-            logger.error(f"Timeout during health check: {e}")
-            return False
         except Exception as e:
-            logger.error(f"Health check failed: {e}")
+            logger.error(f"Unexpected error in health check: {e}")
             return False
     
     async def validate_token(self, token: str, max_retries: int = 3) -> Optional[Session]:

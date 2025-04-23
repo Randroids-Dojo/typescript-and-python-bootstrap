@@ -170,23 +170,109 @@ async def detailed_health_check():
     
     # Check Auth service connectivity
     try:
-        auth_status = await auth_client.health_check()
-        if auth_status:
-            health["components"]["auth_service"] = "healthy"
+        # First check if the auth_client is in offline mode
+        offline_mode = getattr(auth_client, "offline_mode", False)
+        
+        if offline_mode:
+            health["components"]["auth_service"] = "offline"
+            health["status"] = "degraded"
+            logger.warning("Auth service is in offline mode")
+            
+            # Add information about offline mode
+            health["auth_service_details"] = {
+                "mode": "offline",
+                "reason": "Auth service unavailable, using offline mode"
+            }
+            
+            # But also try to check if the Auth service is now available
+            # This could happen if it became available after the initial connection attempts
+            try:
+                import httpx
+                async with httpx.AsyncClient(timeout=5) as client:
+                    logger.debug("Attempting direct health check to Auth service")
+                    response = await client.get(f"{auth_client.base_url}/health")
+                    if response.status_code == 200:
+                        data = response.json()
+                        if data.get("status") == "healthy":
+                            logger.info("Auth service is actually available now, attempting reconnection")
+                            health["auth_service_details"]["note"] = "Auth service appears to be available now, reconnection in progress"
+                            
+                            # Attempt to create a new online client and reconnect immediately
+                            try:
+                                from app.auth.better_auth import BetterAuthClient
+                                # Create new client with online mode
+                                new_client = BetterAuthClient(
+                                    base_url=auth_client.base_url,
+                                    cache_redis_url=os.getenv("REDIS_URL", "redis://redis:6379/0"),
+                                    client_id=os.getenv("BETTER_AUTH_CLIENT_ID", "backend-service"),
+                                    client_secret=os.getenv("BETTER_AUTH_CLIENT_SECRET", "backend-service-secret"),
+                                    connection_timeout=5,
+                                    cache_ttl=int(os.getenv("BETTER_AUTH_CACHE_TTL", "300"))
+                                )
+                                
+                                # Test the client's connection
+                                client_healthy = await new_client.health_check()
+                                
+                                if client_healthy:
+                                    # Update the global client reference
+                                    from app.auth.client import auth_client as global_client
+                                    import types
+                                    # Replace attributes of the global client
+                                    global_client.offline_mode = False
+                                    global_client._http_client = new_client._http_client
+                                    
+                                    logger.info("Successfully reconnected to Auth service!")
+                                    health["components"]["auth_service"] = "healthy"
+                                    health["status"] = "healthy" 
+                                    health["auth_service_details"] = {
+                                        "status": "reconnected",
+                                        "message": "Successfully reconnected to Auth service"
+                                    }
+                            except Exception as reconnect_error:
+                                logger.error(f"Failed to reconnect to Auth service: {reconnect_error}")
+            except Exception:
+                # Ignore exceptions, we're just doing a supplementary check
+                pass
         else:
-            # If offline mode is active, show that in the health status
-            if auth_client.offline_mode:
-                health["components"]["auth_service"] = "offline"
-                health["status"] = "degraded"
-                logger.warning("Auth service is in offline mode")
+            # Normal health check for online mode
+            auth_status = await auth_client.health_check()
+            if auth_status:
+                health["components"]["auth_service"] = "healthy"
+                logger.info("Auth service health check: OK")
             else:
                 health["components"]["auth_service"] = "degraded"
                 health["status"] = "degraded"
                 logger.warning("Auth service health check reports degraded status")
+                
+                # Try to get more detailed information about why it's degraded
+                try:
+                    # Use raw httpx request to check auth service health with more details
+                    import httpx
+                    async with httpx.AsyncClient(timeout=5) as client:
+                        response = await client.get(f"{auth_client.base_url}/health")
+                        if response.status_code == 200:
+                            auth_health_data = response.json()
+                            health["auth_service_details"] = {
+                                "reported_status": auth_health_data.get("status", "unknown"),
+                                "components": auth_health_data.get("components", {}),
+                                "message": "Auth service is responding but reports degraded status"
+                            }
+                            logger.warning(f"Auth service details: {auth_health_data}")
+                except Exception as detail_error:
+                    logger.error(f"Failed to get detailed auth service health: {detail_error}")
+                    health["auth_service_details"] = {
+                        "error": "Could not retrieve detailed health information"
+                    }
     except Exception as e:
         logger.error(f"Auth service health check failed: {e}")
         health["components"]["auth_service"] = "unhealthy"
         health["status"] = "degraded"
+        
+        # Add additional details about the error
+        health["auth_service_details"] = {
+            "error": str(e),
+            "message": "Failed to connect to Auth service"
+        }
         
     # Add additional information about fallback status
     if health["components"]["auth_service"] != "healthy":

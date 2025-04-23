@@ -1,4 +1,4 @@
-[tool.ruff]
+# Ruff configuration
 line-length = 100
 target-version = "py39"
 select = ["E", "F", "B", "I"]
@@ -20,5 +20,5 @@ exclude = [
     "migrations",
 ]
 
-[tool.ruff.isort]
+[isort]
 known-third-party = ["fastapi", "pydantic", "sqlalchemy"]
