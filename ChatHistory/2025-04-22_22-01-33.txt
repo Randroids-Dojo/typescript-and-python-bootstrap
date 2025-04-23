@@ -1,0 +1,5 @@
+User: code
+
+[Request interrupted by user]
+
+User: You are the FrontEnd agent. Start executing ./FrontEnd/todo.txt being sure to follow your ./FrontEnd/CLAUDE.md

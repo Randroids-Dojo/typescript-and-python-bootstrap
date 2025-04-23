@@ -37,7 +37,7 @@ const handleResponse = async <T>(response: Response): Promise<ApiResponse<T>> =>
           details: errorData.details || errorData,
         },
       };
-    } catch (e) {
+    } catch {
       // If the error response is not valid JSON
       return {
         error: {
@@ -57,7 +57,7 @@ const handleResponse = async <T>(response: Response): Promise<ApiResponse<T>> =>
   try {
     const data = await response.json();
     return { data };
-  } catch (e) {
+  } catch {
     // If the response is not valid JSON
     return {
       error: {
@@ -103,12 +103,12 @@ export const apiClient = {
         method: 'GET',
       });
       return handleResponse<T>(response);
-    } catch (e) {
+    } catch (err) {
       return {
         error: {
           status: 500,
           message: 'Failed to make request',
-          details: e instanceof Error ? e.message : String(e),
+          details: err instanceof Error ? err.message : String(err),
         },
       };
     }
@@ -125,12 +125,12 @@ export const apiClient = {
         body: JSON.stringify(data),
       });
       return handleResponse<T>(response);
-    } catch (e) {
+    } catch (err) {
       return {
         error: {
           status: 500,
           message: 'Failed to make request',
-          details: e instanceof Error ? e.message : String(e),
+          details: err instanceof Error ? err.message : String(err),
         },
       };
     }
@@ -147,12 +147,12 @@ export const apiClient = {
         body: JSON.stringify(data),
       });
       return handleResponse<T>(response);
-    } catch (e) {
+    } catch (err) {
       return {
         error: {
           status: 500,
           message: 'Failed to make request',
-          details: e instanceof Error ? e.message : String(e),
+          details: err instanceof Error ? err.message : String(err),
         },
       };
     }
@@ -169,12 +169,12 @@ export const apiClient = {
         body: JSON.stringify(data),
       });
       return handleResponse<T>(response);
-    } catch (e) {
+    } catch (err) {
       return {
         error: {
           status: 500,
           message: 'Failed to make request',
-          details: e instanceof Error ? e.message : String(e),
+          details: err instanceof Error ? err.message : String(err),
         },
       };
     }
@@ -190,12 +190,12 @@ export const apiClient = {
         method: 'DELETE',
       });
       return handleResponse<T>(response);
-    } catch (e) {
+    } catch (err) {
       return {
         error: {
           status: 500,
           message: 'Failed to make request',
-          details: e instanceof Error ? e.message : String(e),
+          details: err instanceof Error ? err.message : String(err),
         },
       };
     }
