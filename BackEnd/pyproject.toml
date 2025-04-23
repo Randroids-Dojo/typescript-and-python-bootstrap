@@ -1,0 +1,18 @@
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+select = ["E", "F", "I", "B"]
+ignore = []
+exclude = [
+    ".git",
+    "__pycache__",
+    "migrations",
+    "alembic",
+]
+
+[tool.ruff.isort]
+known-first-party = ["app"]
+
+[tool.pytest.ini_options]
+pythonpath = "."
+testpaths = ["tests"]
