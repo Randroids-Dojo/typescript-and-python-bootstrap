@@ -17,46 +17,172 @@ interface UserRegistrationData {
   [key: string]: unknown;
 }
 
-// Mock betterAuth client for development until the real client is available
+// BetterAuth client implementation
 const betterAuth = (config: BetterAuthConfig) => {
-  console.log('Initializing betterAuth with config:', config);
+  const { baseUrl, retryConfig, onError } = config;
+  
+  // Helper function to handle API requests with retries
+  const apiRequest = async <T>(
+    url: string, 
+    options: RequestInit, 
+    retries = retryConfig?.maxRetries || 3
+  ): Promise<T> => {
+    try {
+      const response = await fetch(`${baseUrl}${url}`, options);
+      
+      // Handle non-successful responses
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const error = new Error(errorData.message || `Request failed with status ${response.status}`);
+        
+        // Add response properties to error object
+        Object.assign(error, {
+          response: {
+            status: response.status,
+            data: errorData,
+            headers: Object.fromEntries(response.headers.entries())
+          }
+        });
+        
+        // Check if the error is retryable
+        if (
+          retries > 0 && 
+          retryConfig?.retryStatusCodes?.includes(response.status)
+        ) {
+          // Wait before retry using the configured delay
+          await new Promise(resolve => 
+            setTimeout(resolve, retryConfig?.retryDelay || 1000)
+          );
+          return apiRequest<T>(url, options, retries - 1);
+        }
+        
+        throw error;
+      }
+      
+      // Return parsed JSON or empty object if no content
+      return response.status === 204 ? {} as T : await response.json() as T;
+    } catch (error) {
+      // Log errors with the provided onError handler
+      if (onError && error instanceof Error) {
+        onError(error);
+      }
+      
+      // Retry network errors if retries available
+      if (
+        retries > 0 && 
+        error instanceof TypeError && 
+        error.message.includes('fetch')
+      ) {
+        // Wait before retry
+        await new Promise(resolve => 
+          setTimeout(resolve, retryConfig?.retryDelay || 1000)
+        );
+        return apiRequest<T>(url, options, retries - 1);
+      }
+      
+      throw error;
+    }
+  };
+  
   return {
     createClient: () => ({
       login: async (email: string, password: string) => {
-        console.log(`Mock login for ${email} with password length: ${password.length}`);
-        return { user: { id: '1', email, name: 'Test User', role: 'user' }, token: 'mock-token' };
+        return apiRequest<{ user: User; token: string }>(
+          '/login', 
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password }),
+            credentials: 'include'
+          }
+        );
       },
+      
       register: async (userData: UserRegistrationData) => {
-        console.log(`Mock register for ${userData.email}`);
-        return { id: '1', ...userData, role: 'user' };
+        return apiRequest<User>(
+          '/register', 
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(userData),
+            credentials: 'include'
+          }
+        );
       },
+      
       logout: async () => {
-        console.log('Mock logout');
-        return true;
+        return apiRequest<boolean>(
+          '/logout', 
+          {
+            method: 'POST',
+            credentials: 'include'
+          }
+        );
       },
+      
       getUser: async () => {
-        console.log('Mock getUser');
-        return { id: '1', email: 'user@example.com', name: 'Test User', role: 'user' };
+        return apiRequest<User>(
+          '/me', 
+          {
+            method: 'GET',
+            credentials: 'include'
+          }
+        );
       },
+      
       refreshToken: async () => {
-        console.log('Mock refreshToken');
-        return { token: 'mock-refreshed-token' };
+        return apiRequest<{ token: string }>(
+          '/refresh', 
+          {
+            method: 'POST',
+            credentials: 'include'
+          }
+        );
       },
+      
       validateToken: async (token: string) => {
-        console.log(`Mock validateToken: ${token}`);
-        return true;
+        return apiRequest<boolean>(
+          '/validate', 
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        );
       },
+      
       resetPassword: async (email: string) => {
-        console.log(`Mock resetPassword for ${email}`);
-        return;
+        return apiRequest<void>(
+          '/reset-password', 
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+          }
+        );
       },
+      
       updateUser: async (userData: Partial<User>) => {
-        console.log(`Mock updateUser: ${JSON.stringify(userData)}`);
-        return { id: '1', ...userData, role: 'user' };
+        return apiRequest<User>(
+          '/user', 
+          {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(userData),
+            credentials: 'include'
+          }
+        );
       },
-      useSession: () => ({
-        status: 'authenticated'
-      })
+      
+      useSession: () => {
+        // This is a client-side stub for the useSession hook
+        // The real implementation would be in a React context
+        return {
+          status: 'authenticated'
+        };
+      }
     })
   };
 };

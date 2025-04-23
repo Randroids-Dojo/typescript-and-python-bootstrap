@@ -25,4 +25,3 @@ function Button({
 }
 
 export { Button }
-export { buttonVariants } from "./button-variants"

@@ -111,4 +111,12 @@ export function FormMessage({ className, ...props }: React.ComponentProps<"p">) 
   )
 }
 
-export { useFormField } from "./form-hooks"
+export function FormHelperText({ className, ...props }: React.ComponentProps<"p">) {
+  return (
+    <p
+      data-slot="form-helper-text"
+      className={cn("text-muted-foreground text-xs mt-1", className)}
+      {...props}
+    />
+  )
+}
