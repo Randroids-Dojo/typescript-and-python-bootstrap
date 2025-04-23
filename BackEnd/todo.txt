@@ -2,25 +2,26 @@
 
 ## Issues to Address
 
-1. Docker Compose is not installed or not in PATH
-   - Install Docker Desktop or Docker Compose CLI using appropriate method for OS
-   - Verify installation with `docker-compose --version`
-   - Ensure Docker service is running
+1. Test Setup Issues
+   - Fix the "executable file not found in $PATH" error for pytest
+   - Setup proper testing container with pytest installed
+   - Add test script to package.json for proper test discovery
 
-2. Environment setup problems
-   - Create .env file from .env.example template
-   - Verify all required environment variables are set correctly
-   - Ensure database connection parameters are correct
+2. Code Quality Tools
+   - Fix "ruff: executable file not found in $PATH" error for linting
+   - Configure proper linting tools in the container
+   - Add pre-commit hooks for code quality
 
-3. Integration issues with BetterAuth
-   - Verify BetterAuth client is properly configured
-   - Test token validation middleware in isolation
-   - Check authentication flow between services
+3. BetterAuth Integration
+   - Review the BetterAuthClient configuration for proper parameters
+   - Ensure the client configuration works with the actual BetterAuth API
+   - Add error handling for BetterAuth client initialization
+   - Verify proper cleanup of Redis cache for BetterAuth tokens
 
-4. Test suite configuration
-   - Complete pytest configuration with proper fixtures
-   - Add database cleanup between tests
-   - Create mock for Auth service in tests
+4. Environment Configuration
+   - Add proper .env example file with all required variables
+   - Document all environment variables needed for BetterAuth
+   - Add validation for required environment variables on startup
 
 ## Original ToDo Items
 

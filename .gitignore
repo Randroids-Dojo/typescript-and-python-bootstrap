@@ -5,3 +5,52 @@
 .env
 */.env
 
+# Node.js
+node_modules/
+*/node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+package-lock.json
+*/package-lock.json
+
+# Python
+__pycache__/
+*/__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Coverage
+coverage/
+.nyc_output
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+
