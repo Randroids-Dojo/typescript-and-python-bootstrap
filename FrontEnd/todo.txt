@@ -1,179 +1,55 @@
 # FrontEnd ToDo List
 
-## Issues Addressed
-1. Code Quality Issues
-   - ✅ Fixed ESLint errors and warnings:
-     - ✅ Removed unused 'theme' variable in ThemeToggle.tsx
-     - ✅ Fixed unused 'e' variables in api.ts error handlers
-     - ✅ Addressed React Hook dependency warnings in AuthContext.tsx
-   - ⚠️ There are still React-refresh warnings for component exports, but these are not critical errors
+## Critical Issues
 
-2. BetterAuth Integration Issues
-   - ✅ Removed duplicate authClient export in auth.ts (lines 1-9 vs 201-203)
-   - ✅ Cleaned up deprecated mock authentication code (lines 59-199)
-   - ✅ Updated AuthContext to properly use new BetterAuth client
-   - ✅ Added proper error handling for auth failures
+1. Auth Service Connection Failure
+   - [ ] Fix authentication failures due to Auth service being unavailable
+   - [ ] Add proper error handling and user feedback for auth service failures
+   - [ ] Implement fallback or retry mechanisms for auth operations
+   - [ ] Add detailed logging for troubleshooting auth integration issues
 
-## Issues Still To Address
-
-1. PostCSS Configuration Error (CRITICAL)
-   - Fix "[ReferenceError] module is not defined in ES module scope" error in postcss.config.js
-   - The error occurs because package.json has "type": "module" but postcss.config.js uses CommonJS syntax
-   - Solution options:
-     - Rename postcss.config.js to postcss.config.cjs OR
-     - Convert the configuration to ES module syntax using export default
-
-2. Component Export Warnings
-   - Fix the React-refresh warnings in the following files:
+2. PostCSS Configuration Error (CRITICAL)
+   - [ ] Fix error in PostCSS configuration: "It looks like you're trying to use `tailwindcss` directly as a PostCSS plugin. The PostCSS plugin has moved to a separate package..."
+   - [ ] Install @tailwindcss/postcss package and update configuration
+   - [ ] Fix import path errors for @/lib/utils in multiple components:
      - src/components/ui/button.tsx
+     - src/components/ui/input.tsx
      - src/components/ui/form.tsx
-     - src/context/AuthContext.tsx
-     - src/context/ThemeContext.tsx
-   - Move constants and functions to separate files from components
+     - src/components/ui/card.tsx
+     - src/components/ui/label.tsx
+     - src/components/ui/dropdown-menu.tsx
 
-3. Testing Framework Setup
-   - Add proper test configuration for the BetterAuth client
-   - Implement test mocks for the BetterAuth API
-   - Add test coverage for authentication flows
-   - Add integration tests for BetterAuth with backend services
+3. BetterAuth Integration
+   - [ ] Fix better-auth integration in src/lib/auth.ts
+   - [ ] Update better-auth client configuration to match Auth service API
+   - [ ] Fix environment variables for Auth service connection
+   - [ ] Implement proper error handling for auth service failures
 
-4. UI Components
-   - Update authentication UI components to use BetterAuth API correctly
-   - Implement proper session management UI with BetterAuth
-   - Ensure secure token handling in the frontend
-   - Add user profile management components
-   - Create session listing and management UI
+## High Priority
 
-5. User Experience
-   - Add proper loading states during authentication operations
-   - Implement clear error messages for auth failures
-   - Create password reset and account recovery flows
-   - Add email verification UI if supported by the Auth service
-   - Improve mobile responsiveness of authentication forms
+1. Component Imports
+   - [ ] Fix import paths for all UI components
+   - [ ] Create missing utility functions referenced in components
+   - [ ] Organize component exports to avoid React refresh warnings
 
-6. Security Enhancements
-   - Implement secure token storage practices
-   - Add session expiry notifications
-   - Create automated logout for inactive sessions
-   - Add visual indicators for secure/insecure connection
-   - Implement device recognition for new logins
+2. Node.js Version Compatibility
+   - [ ] Address Node.js version compatibility warnings
+   - [ ] Update Docker image to use Node.js 20+ if required by dependencies
+   - [ ] Update package.json to specify correct engine requirements
 
-## Original ToDo Items
+## Medium Priority
 
-### Initial Setup
+1. UI Improvements
+   - [ ] Update component styling to match design system
+   - [ ] Fix form validation for authentication forms
+   - [ ] Implement proper error handling for API requests
 
-1. Create Dockerfile and .dockerignore
-2. Initialize React TypeScript project with Vite
-   - Use the command: `npm create vite@latest . -- --template react-ts`
-3. Set up shadcn
-   - Install and initialize shadcn/ui: `npx shadcn-ui@latest init`
-   - Configure tailwind.config.js and globals.css
-   - Choose style (default), base color (slate), and CSS variables (true)
-   - Enable TypeScript (tsx: true)
-4. Create .env.example with necessary environment variables
-5. Add linting configuration (ESLint, Prettier)
+2. Docker Environment
+   - [ ] Fix environment variable configuration in Docker
 
-### Project Structure
+## Low Priority
 
-1. Implement folder structure as outlined in claude.md
-2. Create basic layout components (header, footer, main layout)
-3. Create navigation structure
-
-### Core Functionality
-
-1. Implement enhanced authentication flow with BetterAuth
-   - Install BetterAuth client: `npm install better-auth`
-   - Create auth client using `createAuthClient` in `lib/auth.ts`:
-     ```typescript
-     import { createAuthClient } from "better-auth/client"
-     
-     export const authClient = createAuthClient({
-       baseURL: process.env.NEXT_PUBLIC_AUTH_URL || "http://localhost:4000"
-     })
-     ```
-   - Create auth context provider wrapping BetterAuth client:
-     ```typescript
-     import { AuthProvider, useAuth } from "./AuthContext"
-     ```
-   - Implement login page with shadcn/ui form components:
-     ```typescript
-     const { data, error } = await authClient.signIn.email({
-       email,
-       password,
-       callbackURL: "/dashboard"
-     })
-     ```
-   - Implement registration page with strong password validation:
-     ```typescript
-     const { data, error } = await authClient.signUp.email({
-       email,
-       password,
-       name,
-       callbackURL: "/dashboard"
-     })
-     ```
-   - Add protected route wrapper using BetterAuth session hooks:
-     ```typescript
-     const { session, status } = authClient.useSession()
-     ```
-   - Add logout functionality with proper token invalidation:
-     ```typescript
-     await authClient.signOut({ /* options */ })
-     ```
-   - Implement session management UI (view/revoke active sessions)
-   - Add social login buttons if configured in Auth service
-
-2. Implement user dashboard
-   - Create dashboard layout using shadcn/ui Card components
-   - Implement profile section with shadcn/ui Avatar and forms
-   - Add settings page with shadcn/ui Switch, Select, and RadioGroup components
-   - Create security settings section (password change, MFA setup)
-   - Add session management UI (list active devices/sessions)
-
-3. Create secure API service layer for BetterAuth integration
-   - Install BetterAuth client: `npm install better-auth`
-   - Create auth client instance using `createAuthClient`
-   - Set up interceptors for automatic token handling
-   - Configure CSRF protection for sensitive operations
-   - Implement automatic token refresh and retry logic
-   - Add session management and token validation
-   - Create comprehensive error handling for auth failures
-   - Set up secure token storage using HttpOnly cookies
-
-4. Implement security-focused error handling
-   - Create toast notification system using shadcn/ui Toast component
-   - Add error boundaries with proper security context
-   - Implement loading states with shadcn/ui Skeleton components
-   - Add security-related notifications (login from new device, etc.)
-   - Create secure error logging (without sensitive information)
-
-### UI Development
-
-1. Implement responsive layout design
-2. Create form components with validation using shadcn/ui Form components
-   - Utilize shadcn/ui Input, Select, Checkbox, RadioGroup, and Textarea components
-   - Add form validation with proper error messaging
-3. Implement dark/light theme toggle using shadcn/ui Switch component
-4. Add loading skeletons for async operations using shadcn/ui Skeleton component
-5. Implement data tables using shadcn/ui Table components
-6. Add dialog modals using shadcn/ui Dialog component
-7. Create navigation using shadcn/ui NavigationMenu component
-8. Implement dropdown menus with shadcn/ui DropdownMenu component
-
-### Testing
-
-1. Set up testing framework (Vitest, React Testing Library)
-2. Write unit tests for key components
-3. Implement integration tests for major user flows
-
-### Docker Integration
-
-1. Ensure Dockerfile correctly builds and serves the application
-2. Test the application running in Docker container
-3. Verify connection to backend and auth services within Docker Compose network
-
-### Documentation
-
-1. Add component documentation
-2. Document API integration points
-3. Create README.md with setup and development instructions
+1. Code Quality
+   - [ ] Fix remaining ESLint warnings
+   - [ ] Update component documentation
+   - [ ] Implement proper testing for components

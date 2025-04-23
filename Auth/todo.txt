@@ -1,209 +1,52 @@
-# Auth Service ToDo List (BetterAuth Implementation)
+# Auth Service ToDo List (BetterAuth Integration)
 
-## Completed Items
+## Critical Issues (Blocking)
 
-1. Type Errors in BetterAuth Integration
-   - ✅ Fixed the type error in auth.ts: passwordRequirements property is not recognized in emailAndPassword config
-   - ✅ Fixed the type error in auth.ts: strategy property is not recognized in session config
-   - ✅ Fixed the type error in middleware/auth.ts: cookies property is not supported in getSession options
-   - ✅ Fixed the type error in middleware/auth.ts: role property doesn't exist on session.user
-   - ✅ Fixed the type error in lib/auth-client.ts: createClient method not found on auth object
+1. TypeScript BetterAuth Integration Error (CRITICAL - Service Not Starting)
+   - [ ] Fix error in src/index.ts: Property 'initialize' does not exist on type
+   - [ ] Check better-auth documentation for correct API usage
+   - [ ] Update BetterAuth initialization code to match actual API
+   - [ ] Consider downgrading better-auth version if latest has breaking changes
+   - [ ] Ensure proper initialization of auth service in container startup
 
-2. Test Failures
-   - ✅ Fixed the failing login test in authService.test.ts
-   - ✅ Properly close Redis and PostgreSQL connections after tests to avoid "did not exit" warning
-   - 🔄 Improve test coverage (currently at 18.25% statements, 21% branch, 6.66% functions)
+2. Node.js Version Compatibility Issues
+   - [ ] Fix EBADENGINE warnings for @simplewebauthn/server requiring Node.js >=20.0.0
+   - [ ] Update Docker image to use node:20-alpine instead of node:18-alpine
+   - [ ] Update package.json to specify correct Node engine requirements
+   - [ ] Test compatibility with all dependencies after Node.js upgrade
 
-3. Environment Configuration
-   - ✅ Ensured all required environment variables are set correctly
-   - ✅ Verified BetterAuth secret and URL configurations
+3. Auth Service API Exposure
+   - [ ] Fix API endpoints not being reachable at http://localhost:4000/api/auth/health
+   - [ ] Ensure correct port configuration in Docker and service
+   - [ ] Fix API routes in src/routes/auth.ts to properly handle auth endpoints
+   - [ ] Add comprehensive health check endpoint that verifies all dependencies
 
-4. Documentation
-   - ✅ Updated documentation to reflect the actual BetterAuth API
-   - ✅ Added example for frontend integration with the BetterAuth client
+## High Priority
 
-## Remaining Issues
+1. BetterAuth Integration Issues
+   - [ ] Fix import errors in tests: ModuleNotFoundError: No module named 'better_auth'
+   - [ ] Update JWT tests to work properly with Redis in test environment
+   - [ ] Fix any mock requirements for tests to run correctly
 
-1. Test Coverage (CRITICAL)
-   - Increase test coverage (currently only 18.25% statements, 21% branch, 6.66% functions)
-   - Create tests for controller functions
-   - Add tests for middleware
-   - Test JWT utilities more thoroughly
-   - Write integration tests for the authentication flows
+2. Test Coverage Improvements
+   - [ ] Fix fail message in jwt.test.ts about exceeding timeout (need async test timeout)
+   - [ ] Fix Redis connection errors in tests by using a proper mock
+   - [ ] Update test configuration to handle async tests properly
 
-2. Code Quality
-   - Fix the error in middleware/auth.ts: empty interface declaration
-   - Address remaining ESLint warnings (32 warnings currently)
-   - Fix unused variables across the codebase:
-     - JWT_ACCESS_EXPIRATION, JWT_REFRESH_EXPIRATION, NODE_ENV in auth.ts
-     - 'result' in authController.ts
-     - 'auth' in lib/auth-client.ts
-     - 'req', 'res', 'next' params in middleware/auth.ts
-     - 'password' in authService.ts
-     - 'error' in jwt.ts
-   - Improve typings for function parameters and returns
-   - Remove any explicit 'any' types
+3. Code Quality
+   - [ ] Fix warning issues identified by ESLint
+   - [ ] Fix TypeScript errors in component interfaces
+   - [ ] Fix any duplicate or conflicting exports
 
-3. Security Enhancements
-   - Implement token rotation for refresh tokens
-   - Add rate limiting for all authentication endpoints
-   - Configure proper CSRF protection
-   - Implement proper token revocation
-   - Enhance session validation with IP binding or device fingerprinting
-   - Add audit logging for authentication events
+## Medium Priority
 
-4. Documentation and Standards
-   - Improve inline documentation for security features
-   - Document integration points with the frontend and backend 
-   - Create examples for all authentication flows
+1. Security Enhancements
+   - [ ] Implement proper token validation with BetterAuth
+   - [ ] Add session tracking and management
+   - [ ] Ensure token rotation works properly
+   - [ ] Implement rate limiting for auth endpoints
 
-## Original ToDo Items
-
-### Understanding BetterAuth
-
-BetterAuth is an authentication framework that provides secure user authentication for web applications. Implementation steps:
-
-1. Initial Installation
-   - Install via npm: `npm install better-auth`
-   - Create authentication instance in `auth.ts` file
-   - Configure environment variables in `.env`:
-     - `BETTER_AUTH_SECRET`: Random encryption key
-     - `BETTER_AUTH_URL`: Base application URL
-
-2. Database Configuration
-   - Configure PostgreSQL database connection
-   - Set up schema using CLI tools:
-     - `npx @better-auth/cli generate`
-     - `npx @better-auth/cli migrate`
-
-3. Authentication Methods
-   - Configure email/password authentication
-   - Set up JWT token handling
-   - Implement required endpoints:
-     - `/api/auth/register`, `/api/auth/login`, `/api/auth/refresh`
-     - `/api/auth/validate`, `/api/auth/me`, `/api/auth/logout`
-
-4. Server Integration
-   - Create Express.js API route handler for `/api/auth/*`
-   - Set up authentication middleware
-   - Implement security best practices from jwt-research
-
-5. Client Integration Support
-   - Provide documentation for frontend integration
-   - Expose consistent API for frontend and backend services
-
-### Initial Setup
-
-1. Create Dockerfile and .dockerignore
-2. Initialize Node.js project
-   - Run `npm init -y`
-3. Install dependencies
-   - BetterAuth core: `npm install better-auth`
-   - BetterAuth CLI: `npm install --save-dev @better-auth/cli`
-   - Express.js: `npm install express`
-   - PostgreSQL client: `npm install pg pg-hstore`
-   - Environment variables: `npm install dotenv`
-   - CORS: `npm install cors`
-   - Redis (for rate limiting and token storage): `npm install ioredis`
-   - Rate limiting: `npm install express-rate-limit rate-limit-redis`
-   - CSRF protection: `npm install csurf`
-   - Development: `npm install --save-dev nodemon typescript ts-node @types/node @types/express @types/pg`
-4. Create .env.example with necessary environment variables including:
-   - BETTER_AUTH_SECRET (strong random encryption key)
-   - BETTER_AUTH_URL (base application URL, e.g., http://localhost:4000)
-   - POSTGRES_HOST (database host)
-   - POSTGRES_PORT (database port)
-   - POSTGRES_USER (database user)
-   - POSTGRES_PASSWORD (database password)
-   - POSTGRES_DB (database name)
-   - REDIS_URL (Redis connection URL)
-   - ACCESS_TOKEN_EXPIRATION (15 minutes recommended)
-   - REFRESH_TOKEN_EXPIRATION (7 days recommended)
-   - CORS_ORIGINS (comma-separated list of allowed origins)
-5. Configure TypeScript (tsconfig.json)
-6. Set up linting configuration (ESLint)
-
-### Project Structure
-
-1. Implement folder structure for BetterAuth integration:
-   ```
-   Auth/
-   ├── Dockerfile
-   ├── src/
-   │   ├── index.ts            # Application entry point
-   │   ├── auth.ts             # BetterAuth instance configuration
-   │   ├── config/             # Environment and app configuration
-   │   ├── controllers/        # Route handlers
-   │   ├── middleware/         # Express middleware
-   │   ├── routes/             # API routes
-   │   ├── schemas/            # Database schemas
-   │   ├── services/           # Business logic
-   │   └── utils/              # Utility functions
-   ├── tests/                  # Test files
-   ├── .env.example            # Example environment variables
-   └── package.json            # Dependencies and scripts
-   ```
-2. Create basic Express application setup with BetterAuth integration
-3. Configure middleware (CORS, rate limiting, security headers)
-4. Implement PostgreSQL database connection for BetterAuth
-5. Set up Redis for rate limiting and token storage
-
-### Authentication Endpoints
-
-1. Configure BetterAuth instance in `auth.ts` file
-   ```typescript
-   import { betterAuth } from "better-auth";
-   
-   export const auth = betterAuth({
-     emailAndPassword: {    
-       enabled: true
-     },
-     session: {
-       // Session configuration properties
-     }
-   });
-   ```
-
-2. Implement Express API router in `routes/auth.ts`
-   ```typescript
-   import express from "express";
-   import auth from "../auth";
-   
-   const router = express.Router();
-   
-   // Handle BetterAuth API routes
-   router.use("/api/auth/*", (req, res, next) => {
-     // Forward to controller
-     next();
-   });
-   
-   export default router;
-   ```
-
-3. Create required authentication endpoints
-   - Email sign up: `/api/auth/register` (handled by BetterAuth)
-   - Email sign in: `/api/auth/login` (handled by BetterAuth)
-   - Social sign in: `/api/auth/oauth/:provider` (if configured)
-   - Sign out: `/api/auth/logout` (handled by BetterAuth)
-   - Session validation: `/api/auth/validate` (handled by BetterAuth)
-   - User profile: `/api/auth/me` (handled by BetterAuth)
-   - Token refresh: `/api/auth/refresh` (handled by BetterAuth)
-
-4. Add custom authentication hooks and middleware
-   - Implement role-based access control middleware
-   - Create custom user profile extensions
-   - Add additional security headers
-   - Implement rate limiting for authentication endpoints
-
-5. Create user and session management utilities
-   - Add admin functions for user management
-   - Implement session listing and revocation
-   - Create account recovery flows
-   - Add email verification if needed
-   - Implement password reset functionality
-
-6. Configure social authentication (optional)
-   - Set up GitHub OAuth integration
-   - Add Google login support
-   - Configure callback handlers
-   - Implement account linking
+2. Documentation
+   - [ ] Document BetterAuth integration for other services
+   - [ ] Update API documentation for auth endpoints
+   - [ ] Document environment variables and configuration options

@@ -1,180 +1,46 @@
 # BackEnd ToDo List
 
-## Issues Addressed
+## Critical Issues
 
-1. Test Setup Issues (DONE)
-   - ✅ Fixed the "executable file not found in $PATH" error for pytest
-   - ✅ Setup proper testing container with pytest installed
-   - ✅ Added test script to package.json for proper test discovery
-   - ✅ Fixed the error showing in ./scripts/test.sh: "npm: executable file not found in $PATH"
+1. Auth Service Connection Failure
+   - [ ] Fix "auth_service":"degraded" status in health check
+   - [ ] Ensure backend can properly connect to Auth service
+   - [ ] Update BetterAuth client code to handle Auth service unavailability gracefully
+   - [ ] Add retry mechanisms for Auth service connections
+   - [ ] Add fallback authentication mode when Auth service is unavailable
 
-2. Code Quality Tools (MOSTLY DONE)
-   - ✅ Fixed "ruff: executable file not found in $PATH" error for linting
-   - ✅ Configured proper linting tools in the container
-   - ⬜ Add pre-commit hooks for code quality
-   - ✅ Fixed the error showing in ./scripts/lint.sh: "npm: executable file not found in $PATH"
+## High Priority
 
-3. Auth Service Integration (DONE)
-   - ✅ Implemented a proper Python client for Auth service integration 
-   - ✅ Ensured client configuration works with the actual Auth service API
-   - ✅ Added error handling for client initialization failures
-   - ✅ Implemented proper cleanup of Redis cache for authentication tokens
-   - ✅ Added session timeout handling and refresh token logic
+1. Test Framework Issues
+   - [ ] Fix TestClient initialization error in tests: TypeError: __init__() got an unexpected keyword argument 'app'
+   - [ ] Fix ModuleNotFoundError for 'better_auth' in test_auth_client_error_handling
+   - [ ] Fix AssertionError in test_redis_connection (assert 'test_value' is None)
+   - [ ] Update pytest configuration to properly handle async tests
 
-4. Environment Configuration (DONE)
-   - ✅ Added proper .env example file with all required variables
-   - ✅ Documented all environment variables needed for Auth integration
-   - ✅ Added validation for required environment variables on startup
-   - ✅ Fixed configuration issues with pydantic settings
+2. Environment Configuration
+   - [ ] Fix error running linting: cannot import name 'main' from 'ruff.__main__'
+   - [ ] Update Python dependencies in requirements.txt to ensure compatibility
+   - [ ] Fix test environment configuration for Redis connection
 
-5. Documentation and API (DONE)
-   - ✅ Added proper OpenAPI documentation for all endpoints
-   - ✅ Documented Auth service integration points
-   - ✅ Fixed circular imports in database models
-   - ✅ Created examples for authentication flows in FastAPI
+3. BetterAuth Integration
+   - [ ] Ensure the proper better-auth client library is installed and configured
+   - [ ] Update mock configurations for BetterAuth client in tests
+   - [ ] Add proper error handling for all Auth service interactions
 
-6. Testing Coverage (TODO)
-   - ⬜ Implement integration tests with the Auth service
-   - ⬜ Create test mocks for the Auth client
-   - ⬜ Add tests for authentication middleware
-   - ⬜ Test token validation and session management
-   - ⬜ Test error handling for authentication failures
+## Medium Priority
 
-## Original ToDo Items
+1. Code Quality Improvements
+   - [ ] Fix remaining linting warnings and errors
+   - [ ] Add more comprehensive test coverage for auth middleware
+   - [ ] Update API documentation to reflect current endpoints
 
-### Initial Setup
+2. Docker Environment
+   - [ ] Ensure all dependencies are correctly installed in the Docker container
+   - [ ] Fix communication between services in Docker Compose setup
 
-1. Create Dockerfile and .dockerignore
-2. Initialize FastAPI project structure
-3. Create requirements.txt with all dependencies
-   - fastapi
-   - uvicorn
-   - sqlalchemy
-   - alembic
-   - psycopg2-binary
-   - redis
-   - better-auth-python
-   - pydantic
-   - pytest
-   - httpx (for testing and external API requests)
-   - python-multipart (for form data processing)
-4. Create .env.example with necessary environment variables
-5. Set up linting configuration (flake8, black, isort)
+## Low Priority
 
-### Database Setup
-
-1. Create SQLAlchemy database models
-2. Set up Alembic for migrations
-3. Create initial migration
-4. Implement database connection and session management
-5. Set up Redis connection for caching
-
-### API Endpoints
-
-1. Create API router structure
-2. Implement CRUD operations for main resources
-3. Add pagination, filtering, and sorting
-4. Implement proper error handling
-5. Document all endpoints with OpenAPI
-
-### Authentication & Authorization with BetterAuth
-
-1. Implement enhanced BetterAuth validation middleware
-   - Install BetterAuth client: `pip install better-auth-python`
-   - Configure client connection to Auth service in `app/auth/client.py`:
-     ```python
-     from better_auth import BetterAuthClient
-     
-     auth_client = BetterAuthClient(
-         base_url=os.getenv("AUTH_SERVICE_URL", "http://auth:4000"),
-         cache_redis_url=os.getenv("REDIS_URL")
-     )
-     ```
-   - Create token validation middleware in `app/middleware/auth.py`:
-     ```python
-     from fastapi import Request, HTTPException, Depends
-     from app.auth.client import auth_client
-     
-     async def verify_token(request: Request):
-         token = request.cookies.get("access_token") or request.headers.get("Authorization", "").replace("Bearer ", "")
-         if not token:
-             raise HTTPException(status_code=401, detail="Not authenticated")
-         
-         session = await auth_client.validate_token(token)
-         if not session:
-             raise HTTPException(status_code=401, detail="Invalid or expired token")
-         
-         request.state.user = session.user
-         return session
-     ```
-   - Create FastAPI dependencies for protected routes in `app/auth/dependencies.py`:
-     ```python
-     from fastapi import Depends, HTTPException
-     from app.middleware.auth import verify_token
-     
-     def require_auth(session = Depends(verify_token)):
-         return session
-     
-     def require_admin(session = Depends(verify_token)):
-         if "admin" not in session.user.roles:
-             raise HTTPException(status_code=403, detail="Admin access required")
-         return session
-     ```
-   - Implement route protection in API endpoints:
-     ```python
-     @router.get("/protected", dependencies=[Depends(require_auth)])
-     async def protected_route():
-         return {"message": "This is a protected route"}
-     ```
-   - Add caching for token validation with Redis
-   - Implement comprehensive session management functions
-
-2. Create comprehensive role-based access control
-   - Implement permission-based authorization with fine-grained controls
-   - Add user roles and permissions to database models
-   - Support hierarchical permissions with inheritance
-   - Create admin endpoints for role management
-   - Implement resource-level access control
-   - Add audit logging for sensitive operations
-
-3. Enhance security measures
-   - Add request rate limiting integrated with Auth service
-   - Implement proper error responses for auth failures
-   - Create standardized error response format
-   - Handle different authentication failure scenarios
-   - Add security headers to all API responses
-   - Implement IP-based blocking for suspicious activities
-   - Create secure logging of authentication events
-
-4. Support additional authentication features
-   - Add MFA validation support if required by resource sensitivity
-   - Implement session validation for critical operations
-   - Create endpoints to integrate with session management
-   - Support step-up authentication for sensitive operations
-   - Interface with Auth service for user management
-
-### Business Logic
-
-1. Implement service layer for business logic
-2. Add caching strategy using Redis
-3. Implement background tasks for async operations
-
-### Testing
-
-1. Set up pytest configuration
-2. Create test database fixtures
-3. Write unit tests for core functionality
-4. Implement integration tests for API endpoints
-
-### Docker Integration
-
-1. Ensure Dockerfile correctly builds the application
-2. Test the application running in Docker container
-3. Verify connection to PostgreSQL and Redis within Docker Compose network
-4. Test integration with Auth service in Docker Compose network
-
-### Documentation
-
-1. Document API endpoints with examples
-2. Create detailed setup instructions
-3. Document integration points with other services
+1. Performance Improvements
+   - [ ] Add caching for frequently accessed resources
+   - [ ] Optimize database queries for performance
+   - [ ] Implement background tasks for non-critical operations
