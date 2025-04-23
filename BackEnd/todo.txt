@@ -2,26 +2,41 @@
 
 ## Issues to Address
 
-1. Test Setup Issues
+1. Test Setup Issues (CRITICAL)
    - Fix the "executable file not found in $PATH" error for pytest
    - Setup proper testing container with pytest installed
    - Add test script to package.json for proper test discovery
+   - Fix the error showing in ./scripts/test.sh: "npm: executable file not found in $PATH"
 
-2. Code Quality Tools
+2. Code Quality Tools (CRITICAL)
    - Fix "ruff: executable file not found in $PATH" error for linting
    - Configure proper linting tools in the container
    - Add pre-commit hooks for code quality
+   - Fix the error showing in ./scripts/lint.sh: "npm: executable file not found in $PATH"
 
 3. BetterAuth Integration
    - Review the BetterAuthClient configuration for proper parameters
    - Ensure the client configuration works with the actual BetterAuth API
    - Add error handling for BetterAuth client initialization
    - Verify proper cleanup of Redis cache for BetterAuth tokens
+   - Add session timeout handling and refresh token logic
 
 4. Environment Configuration
    - Add proper .env example file with all required variables
    - Document all environment variables needed for BetterAuth
    - Add validation for required environment variables on startup
+
+5. Documentation and API
+   - Add proper OpenAPI documentation for all endpoints
+   - Document BetterAuth integration points
+   - Create examples for authentication flows in FastAPI
+
+6. Testing Coverage
+   - Implement integration tests with the Auth service
+   - Create test mocks for the BetterAuth client
+   - Add tests for authentication middleware
+   - Test token validation and session management
+   - Test error handling for authentication failures
 
 ## Original ToDo Items
 

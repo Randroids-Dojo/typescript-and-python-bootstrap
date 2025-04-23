@@ -15,16 +15,48 @@
    - ✅ Added proper error handling for auth failures
 
 ## Issues Still To Address
-1. Testing Framework Setup
+
+1. PostCSS Configuration Error (CRITICAL)
+   - Fix "[ReferenceError] module is not defined in ES module scope" error in postcss.config.js
+   - The error occurs because package.json has "type": "module" but postcss.config.js uses CommonJS syntax
+   - Solution options:
+     - Rename postcss.config.js to postcss.config.cjs OR
+     - Convert the configuration to ES module syntax using export default
+
+2. Component Export Warnings
+   - Fix the React-refresh warnings in the following files:
+     - src/components/ui/button.tsx
+     - src/components/ui/form.tsx
+     - src/context/AuthContext.tsx
+     - src/context/ThemeContext.tsx
+   - Move constants and functions to separate files from components
+
+3. Testing Framework Setup
    - Add proper test configuration for the BetterAuth client
    - Implement test mocks for the BetterAuth API
    - Add test coverage for authentication flows
    - Add integration tests for BetterAuth with backend services
 
-2. UI Components
+4. UI Components
    - Update authentication UI components to use BetterAuth API correctly
    - Implement proper session management UI with BetterAuth
    - Ensure secure token handling in the frontend
+   - Add user profile management components
+   - Create session listing and management UI
+
+5. User Experience
+   - Add proper loading states during authentication operations
+   - Implement clear error messages for auth failures
+   - Create password reset and account recovery flows
+   - Add email verification UI if supported by the Auth service
+   - Improve mobile responsiveness of authentication forms
+
+6. Security Enhancements
+   - Implement secure token storage practices
+   - Add session expiry notifications
+   - Create automated logout for inactive sessions
+   - Add visual indicators for secure/insecure connection
+   - Implement device recognition for new logins
 
 ## Original ToDo Items
 

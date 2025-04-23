@@ -24,22 +24,38 @@
 
 ## Remaining Issues
 
-1. Test Coverage
-   - Increase test coverage by adding more unit and integration tests
+1. Test Coverage (CRITICAL)
+   - Increase test coverage (currently only 18.25% statements, 21% branch, 6.66% functions)
    - Create tests for controller functions
    - Add tests for middleware
    - Test JWT utilities more thoroughly
+   - Write integration tests for the authentication flows
 
 2. Code Quality
-   - Address remaining ESLint warnings
-   - Fix unused variables across the codebase
+   - Fix the error in middleware/auth.ts: empty interface declaration
+   - Address remaining ESLint warnings (32 warnings currently)
+   - Fix unused variables across the codebase:
+     - JWT_ACCESS_EXPIRATION, JWT_REFRESH_EXPIRATION, NODE_ENV in auth.ts
+     - 'result' in authController.ts
+     - 'auth' in lib/auth-client.ts
+     - 'req', 'res', 'next' params in middleware/auth.ts
+     - 'password' in authService.ts
+     - 'error' in jwt.ts
    - Improve typings for function parameters and returns
+   - Remove any explicit 'any' types
 
 3. Security Enhancements
    - Implement token rotation for refresh tokens
    - Add rate limiting for all authentication endpoints
    - Configure proper CSRF protection
    - Implement proper token revocation
+   - Enhance session validation with IP binding or device fingerprinting
+   - Add audit logging for authentication events
+
+4. Documentation and Standards
+   - Improve inline documentation for security features
+   - Document integration points with the frontend and backend 
+   - Create examples for all authentication flows
 
 ## Original ToDo Items
 
