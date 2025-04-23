@@ -3,28 +3,8 @@
 ## Critical Issues
 
 1. Auth Service Connection Failure
-   - [ ] Fix sys module import missing error in client.py: "name 'sys' is not defined"
    - [ ] Fix "auth_service":"degraded" status in health check
    - [ ] Ensure backend can properly connect to Auth service
-   - [ ] Add proper error handling when Auth service is unavailable
-
-2. Test Framework Issues
-   - [ ] Fix TestClient initialization error in tests: TypeError: __init__() got an unexpected keyword argument 'app'
-   - [ ] Update TestClient initialization in conftest.py to match FastAPI's latest version
-   - [ ] Fix pytest configuration to handle async tests properly
-
-## High Priority
-
-1. BetterAuth Integration
-   - [ ] Verify the proper integration with Auth service's BetterAuth implementation
-   - [ ] Fix connection retries and fallback to offline mode
-   - [ ] Add better logging for Auth service status
-   - [ ] Make sure token validation works correctly
-
-2. Environment Configuration
-   - [ ] Fix error running linting: cannot import name 'main' from 'ruff.__main__'
-   - [ ] Update Python dependencies in requirements.txt to ensure compatibility
-   - [ ] Fix Docker environment for proper communication with Auth service
 
 ## Medium Priority
 
@@ -32,7 +12,3 @@
    - [ ] Fix remaining linting warnings and errors
    - [ ] Add more comprehensive test coverage for auth middleware
    - [ ] Update API documentation to match current endpoints
-
-2. Performance Improvements
-   - [ ] Optimize Redis connection for caching auth tokens
-   - [ ] Add proper session handling and token refresh
