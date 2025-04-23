@@ -3,44 +3,36 @@
 ## Critical Issues
 
 1. Auth Service Connection Failure
+   - [ ] Fix sys module import missing error in client.py: "name 'sys' is not defined"
    - [ ] Fix "auth_service":"degraded" status in health check
    - [ ] Ensure backend can properly connect to Auth service
-   - [ ] Update BetterAuth client code to handle Auth service unavailability gracefully
-   - [ ] Add retry mechanisms for Auth service connections
-   - [ ] Add fallback authentication mode when Auth service is unavailable
+   - [ ] Add proper error handling when Auth service is unavailable
+
+2. Test Framework Issues
+   - [ ] Fix TestClient initialization error in tests: TypeError: __init__() got an unexpected keyword argument 'app'
+   - [ ] Update TestClient initialization in conftest.py to match FastAPI's latest version
+   - [ ] Fix pytest configuration to handle async tests properly
 
 ## High Priority
 
-1. Test Framework Issues
-   - [ ] Fix TestClient initialization error in tests: TypeError: __init__() got an unexpected keyword argument 'app'
-   - [ ] Fix ModuleNotFoundError for 'better_auth' in test_auth_client_error_handling
-   - [ ] Fix AssertionError in test_redis_connection (assert 'test_value' is None)
-   - [ ] Update pytest configuration to properly handle async tests
+1. BetterAuth Integration
+   - [ ] Verify the proper integration with Auth service's BetterAuth implementation
+   - [ ] Fix connection retries and fallback to offline mode
+   - [ ] Add better logging for Auth service status
+   - [ ] Make sure token validation works correctly
 
 2. Environment Configuration
    - [ ] Fix error running linting: cannot import name 'main' from 'ruff.__main__'
    - [ ] Update Python dependencies in requirements.txt to ensure compatibility
-   - [ ] Fix test environment configuration for Redis connection
-
-3. BetterAuth Integration
-   - [ ] Ensure the proper better-auth client library is installed and configured
-   - [ ] Update mock configurations for BetterAuth client in tests
-   - [ ] Add proper error handling for all Auth service interactions
+   - [ ] Fix Docker environment for proper communication with Auth service
 
 ## Medium Priority
 
 1. Code Quality Improvements
    - [ ] Fix remaining linting warnings and errors
    - [ ] Add more comprehensive test coverage for auth middleware
-   - [ ] Update API documentation to reflect current endpoints
+   - [ ] Update API documentation to match current endpoints
 
-2. Docker Environment
-   - [ ] Ensure all dependencies are correctly installed in the Docker container
-   - [ ] Fix communication between services in Docker Compose setup
-
-## Low Priority
-
-1. Performance Improvements
-   - [ ] Add caching for frequently accessed resources
-   - [ ] Optimize database queries for performance
-   - [ ] Implement background tasks for non-critical operations
+2. Performance Improvements
+   - [ ] Optimize Redis connection for caching auth tokens
+   - [ ] Add proper session handling and token refresh

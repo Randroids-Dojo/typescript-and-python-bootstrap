@@ -1,52 +1,43 @@
-# Auth Service ToDo List (BetterAuth Integration)
+# Auth Service ToDo List
 
-## Critical Issues (Blocking)
+## Critical Issues
 
-1. TypeScript BetterAuth Integration Error (CRITICAL - Service Not Starting)
-   - [ ] Fix error in src/index.ts: Property 'initialize' does not exist on type
-   - [ ] Check better-auth documentation for correct API usage
-   - [ ] Update BetterAuth initialization code to match actual API
-   - [ ] Consider downgrading better-auth version if latest has breaking changes
-   - [ ] Ensure proper initialization of auth service in container startup
+1. BetterAuth Integration Problems
+   - [ ] Fix warning: "No database configuration provided. Using memory adapter in development"
+   - [ ] Properly configure BetterAuth with database settings in auth.ts
+   - [ ] Ensure proper initialization of BetterAuth in index.ts
+   - [ ] Configure production-ready database connection for BetterAuth
 
-2. Node.js Version Compatibility Issues
-   - [ ] Fix EBADENGINE warnings for @simplewebauthn/server requiring Node.js >=20.0.0
-   - [ ] Update Docker image to use node:20-alpine instead of node:18-alpine
-   - [ ] Update package.json to specify correct Node engine requirements
-   - [ ] Test compatibility with all dependencies after Node.js upgrade
+2. Node.js Version Compatibility
+   - [ ] Fix EBADENGINE warnings for packages requiring Node.js >=20.0.0
+   - [ ] Update Docker image to use Node.js 20 instead of 18
+   - [ ] Update package.json to specify correct Node.js version requirements
 
-3. Auth Service API Exposure
-   - [ ] Fix API endpoints not being reachable at http://localhost:4000/api/auth/health
-   - [ ] Ensure correct port configuration in Docker and service
-   - [ ] Fix API routes in src/routes/auth.ts to properly handle auth endpoints
-   - [ ] Add comprehensive health check endpoint that verifies all dependencies
+3. Test Failures
+   - [ ] Fix test setup.js error: "ReferenceError: afterAll is not defined"
+   - [ ] Fix Jest configuration to properly handle async tests
+   - [ ] Update test mocks for BetterAuth client
 
 ## High Priority
 
-1. BetterAuth Integration Issues
-   - [ ] Fix import errors in tests: ModuleNotFoundError: No module named 'better_auth'
-   - [ ] Update JWT tests to work properly with Redis in test environment
-   - [ ] Fix any mock requirements for tests to run correctly
+1. Integration with Other Services
+   - [ ] Ensure proper JWT token validation with Frontend and Backend
+   - [ ] Verify all auth endpoints are accessible and working as expected
+   - [ ] Add detailed health check endpoint for monitoring
 
-2. Test Coverage Improvements
-   - [ ] Fix fail message in jwt.test.ts about exceeding timeout (need async test timeout)
-   - [ ] Fix Redis connection errors in tests by using a proper mock
-   - [ ] Update test configuration to handle async tests properly
-
-3. Code Quality
-   - [ ] Fix warning issues identified by ESLint
-   - [ ] Fix TypeScript errors in component interfaces
-   - [ ] Fix any duplicate or conflicting exports
+2. Code Quality
+   - [ ] Fix ESLint warnings in tests (unused variables)
+   - [ ] Improve error handling in auth-client.ts
+   - [ ] Add more comprehensive logging for auth operations
 
 ## Medium Priority
 
 1. Security Enhancements
-   - [ ] Implement proper token validation with BetterAuth
-   - [ ] Add session tracking and management
-   - [ ] Ensure token rotation works properly
-   - [ ] Implement rate limiting for auth endpoints
+   - [ ] Implement token rotation for better security
+   - [ ] Add rate limiting for login attempts
+   - [ ] Add better protection against common auth attacks
 
 2. Documentation
-   - [ ] Document BetterAuth integration for other services
-   - [ ] Update API documentation for auth endpoints
+   - [ ] Document all auth endpoints for Frontend and Backend integration
+   - [ ] Add API documentation for token usage
    - [ ] Document environment variables and configuration options

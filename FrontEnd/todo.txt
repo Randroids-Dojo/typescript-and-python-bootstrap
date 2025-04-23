@@ -2,54 +2,37 @@
 
 ## Critical Issues
 
-1. Auth Service Connection Failure
-   - [ ] Fix authentication failures due to Auth service being unavailable
-   - [ ] Add proper error handling and user feedback for auth service failures
-   - [ ] Implement fallback or retry mechanisms for auth operations
-   - [ ] Add detailed logging for troubleshooting auth integration issues
+1. Better Auth Integration
+   - [ ] Replace mock implementation in src/lib/auth.ts with real better-auth client
+   - [ ] Ensure proper error handling for auth service connections
+   - [ ] Configure auth client to connect to correct Auth service URL
+   - [ ] Fix client retry mechanisms for intermittent Auth service issues
 
-2. PostCSS Configuration Error (CRITICAL)
-   - [ ] Fix error in PostCSS configuration: "It looks like you're trying to use `tailwindcss` directly as a PostCSS plugin. The PostCSS plugin has moved to a separate package..."
-   - [ ] Install @tailwindcss/postcss package and update configuration
-   - [ ] Fix import path errors for @/lib/utils in multiple components:
-     - src/components/ui/button.tsx
-     - src/components/ui/input.tsx
-     - src/components/ui/form.tsx
-     - src/components/ui/card.tsx
-     - src/components/ui/label.tsx
-     - src/components/ui/dropdown-menu.tsx
-
-3. BetterAuth Integration
-   - [ ] Fix better-auth integration in src/lib/auth.ts
-   - [ ] Update better-auth client configuration to match Auth service API
-   - [ ] Fix environment variables for Auth service connection
-   - [ ] Implement proper error handling for auth service failures
+2. Node.js Version Compatibility
+   - [ ] Address Node.js version compatibility warnings (requires Node.js >=20.0.0)
+   - [ ] Update Docker image to use Node.js 20+ for proper compatibility with react-router and other dependencies
+   - [ ] Ensure all npm packages are compatible with the Node.js version
 
 ## High Priority
 
 1. Component Imports
-   - [ ] Fix import paths for all UI components
-   - [ ] Create missing utility functions referenced in components
-   - [ ] Organize component exports to avoid React refresh warnings
+   - [ ] Fix React fast refresh warnings in UI components
+   - [ ] Organize component exports to avoid "Fast refresh only works when a file only exports components" warnings
+   - [ ] Fix any import/export issues in UI components
 
-2. Node.js Version Compatibility
-   - [ ] Address Node.js version compatibility warnings
-   - [ ] Update Docker image to use Node.js 20+ if required by dependencies
-   - [ ] Update package.json to specify correct engine requirements
+2. Environment Configuration
+   - [ ] Ensure .env files are properly configured for Auth service connection
+   - [ ] Fix Docker environment variables for proper service communication
+   - [ ] Verify Auth service URL is being properly picked up from environment variables
 
 ## Medium Priority
 
-1. UI Improvements
-   - [ ] Update component styling to match design system
-   - [ ] Fix form validation for authentication forms
-   - [ ] Implement proper error handling for API requests
+1. Testing
+   - [ ] Implement proper tests for auth integration
+   - [ ] Add tests for UI components
+   - [ ] Set up automatic test runs in CI/CD pipeline
 
-2. Docker Environment
-   - [ ] Fix environment variable configuration in Docker
-
-## Low Priority
-
-1. Code Quality
-   - [ ] Fix remaining ESLint warnings
-   - [ ] Update component documentation
-   - [ ] Implement proper testing for components
+2. User Experience
+   - [ ] Improve error messages for auth failures
+   - [ ] Add loading states during auth operations
+   - [ ] Implement proper form validation for auth forms
