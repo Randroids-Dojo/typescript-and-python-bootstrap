@@ -38,7 +38,12 @@ app.use(authRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok' });
+  res.status(200).json({ 
+    status: 'healthy',
+    service: 'auth',
+    version: '1.0.0',
+    timestamp: new Date().toISOString()
+  });
 });
 
 // Error handling middleware

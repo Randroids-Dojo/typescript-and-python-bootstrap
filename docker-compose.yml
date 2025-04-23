@@ -36,7 +36,7 @@ services:
       - auth
 
   auth:
-    image: node:18-alpine
+    image: node:20-alpine
     working_dir: /app
     command: sh -c "npm install && npm start"
     ports:
@@ -58,6 +58,8 @@ services:
       - CORS_ORIGINS=http://localhost:3000
       - LOGIN_RATE_LIMIT_WINDOW=15
       - LOGIN_RATE_LIMIT_MAX=5
+      - BETTER_AUTH_SECRET=better-auth-development-secret
+      - BETTER_AUTH_URL=http://localhost:4000
     depends_on:
       - postgres
       - redis
