@@ -2,9 +2,7 @@ import authService from '../src/services/authService';
 import UserModel from '../src/models/user';
 import * as jwtUtils from '../src/utils/jwt';
 // Mock bcrypt module
-jest.mock('bcrypt', () => ({
-  compare: jest.fn()
-}));
+jest.mock('bcrypt');
 
 // Reference the mock after it's defined
 const bcrypt = jest.requireMock('bcrypt');

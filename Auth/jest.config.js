@@ -9,5 +9,9 @@ module.exports = {
   collectCoverageFrom: [
     'src/**/*.{ts,js}',
     '!src/index.ts'
-  ]
+  ],
+  moduleNameMapper: {
+    '^bcrypt$': '<rootDir>/tests/mocks/bcrypt.js',
+    '^.+/src/utils/redis$': '<rootDir>/tests/mocks/redis.js'
+  }
 };
