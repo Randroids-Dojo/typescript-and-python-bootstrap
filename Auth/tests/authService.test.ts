@@ -1,14 +1,48 @@
 import authService from '../src/services/authService';
 import UserModel from '../src/models/user';
 import * as jwtUtils from '../src/utils/jwt';
+// Mock bcrypt module
+jest.mock('bcrypt', () => ({
+  compare: jest.fn()
+}));
+
+// Reference the mock after it's defined
+const bcrypt = jest.requireMock('bcrypt');
+import redisClient from '../src/utils/redis';
+import dbPool from '../src/utils/db';
 
 // Mock UserModel and JWT utilities
 jest.mock('../src/models/user');
 jest.mock('../src/utils/jwt');
 
+// Mock Redis and DB connections to avoid actual connections during tests
+jest.mock('../src/utils/redis', () => ({
+  __esModule: true,
+  default: {
+    get: jest.fn(),
+    set: jest.fn(),
+    del: jest.fn(),
+    quit: jest.fn().mockResolvedValue('OK')
+  }
+}));
+
+jest.mock('../src/utils/db', () => ({
+  __esModule: true,
+  default: {
+    query: jest.fn(),
+    end: jest.fn().mockResolvedValue(undefined)
+  }
+}));
+
 describe('AuthService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+  
+  // Close connections after all tests
+  afterAll(async () => {
+    await redisClient.quit();
+    await dbPool.end();
   });
 
   describe('register', () => {
@@ -104,10 +138,8 @@ describe('AuthService', () => {
         updatedAt: new Date()
       });
       
-      // Mock bcrypt.compare
-      jest.mock('bcrypt', () => ({
-        compare: jest.fn().mockResolvedValue(true)
-      }));
+      // Properly mock bcrypt.compare to return true
+      (bcrypt.compare as jest.Mock).mockResolvedValueOnce(true);
       
       // Mock token generation
       (jwtUtils.generateAccessToken as jest.Mock).mockReturnValueOnce('access_token');
@@ -118,6 +150,8 @@ describe('AuthService', () => {
       expect(result.success).toBe(true);
       expect(result.user).toBeDefined();
       expect(result.tokens).toBeDefined();
+      expect(result.tokens?.accessToken).toBe('access_token');
+      expect(result.tokens?.refreshToken).toBe('refresh_token');
     });
   });
 });

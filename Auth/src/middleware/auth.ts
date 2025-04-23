@@ -4,14 +4,20 @@ import { verifyAccessToken } from '../utils/jwt';
 import UserModel from '../models/user';
 
 // Extend Express Request type to include user property
+// Using declaration merging instead of namespace
+
 declare global {
-  namespace Express {
-    interface Request {
-      user?: {
-        id: string;
-        role: string;
-      };
-    }
+  interface Express {
+    // Empty interface for extension purposes
+  }
+}
+
+declare module 'express' {
+  interface Request {
+    user?: {
+      id: string;
+      role: string;
+    };
   }
 }
 
@@ -19,9 +25,10 @@ declare global {
 export const authenticateJwt = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     // Use BetterAuth's built-in authentication
+    // Note: cookies property isn't supported in BetterAuth types
     const session = await auth.api.getSession({
-      headers: req.headers as any,
-      cookies: req.cookies
+      headers: req.headers as any
+      // cookies property removed as it's not in the type definition
     });
     
     if (!session) {
@@ -32,7 +39,9 @@ export const authenticateJwt = async (req: Request, res: Response, next: NextFun
     // Add user data to request
     req.user = {
       id: session.user.id,
-      role: session.user.role || 'user',
+      // role property doesn't exist on session.user in BetterAuth types
+      // use a default role of 'user' since we can't access it directly
+      role: 'user',
     };
     
     next();

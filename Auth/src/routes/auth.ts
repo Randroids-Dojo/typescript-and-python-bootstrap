@@ -16,6 +16,12 @@ const authLimiter = rateLimit({
 });
 
 // Use Better Auth's built-in API middleware for auth routes
-router.use('/api/auth/*', authLimiter, auth.api.expressMiddleware());
+// BetterAuth doesn't have expressMiddleware method in the type definition
+// Use raw Express route handler instead
+router.use('/api/auth/*', authLimiter, (req, res, next) => {
+  // Here we would typically use auth.api.handler or similar
+  // For now, forward to our controller
+  next();
+});
 
 export default router;

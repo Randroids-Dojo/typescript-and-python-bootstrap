@@ -34,7 +34,7 @@ export const protectSensitiveOperation = (
   res: express.Response, 
   next: express.NextFunction
 ): void => {
-  // @ts-ignore - ignore the type mismatch for now
+  // @ts-expect-error CSRF protection type issues
   csrfProtection(req, res, next);
 };
 
@@ -44,8 +44,8 @@ export const setCsrfToken = (
   res: express.Response, 
   next: express.NextFunction
 ): void => {
-  // @ts-ignore - ignore the type mismatch for now
-  csrfProtection(req, res, (error: any) => {
+  // @ts-expect-error CSRF protection type issues
+  csrfProtection(req, res, (error: unknown) => {
     if (error) {
       next(error);
       return;

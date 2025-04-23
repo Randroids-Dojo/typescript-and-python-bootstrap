@@ -103,3 +103,84 @@ The Dockerfile should:
 Make sure the Docker configuration works within the Docker Compose setup at the project root.
 
 ## Refer to the todo.txt file for your specific implementation tasks.
+
+## Running Tests and Linting
+
+Before committing any changes, always run tests and linting:
+
+```bash
+# Run tests
+npm test
+
+# Run linting
+npm run lint
+```
+
+## API Documentation
+
+### BetterAuth API
+
+BetterAuth provides the following endpoints:
+
+| Endpoint | Method | Description | Request Body | Response |
+|----------|--------|-------------|-------------|----------|
+| `/api/auth/register` | POST | Create a new user account | `{ email, password }` | `{ success, user, tokens }` |
+| `/api/auth/login` | POST | Authenticate user | `{ email, password }` | `{ success, user, tokens }` |
+| `/api/auth/refresh` | POST | Refresh access token | `{ refreshToken }` | `{ success, tokens }` |
+| `/api/auth/logout` | POST | Logout user | `{ refreshToken }` | `{ success }` |
+| `/api/auth/me` | GET | Get user profile | none | `{ success, user }` |
+| `/api/auth/validate` | POST | Validate token | `{ token }` | `{ success, isValid, claims }` |
+
+### Frontend Integration
+
+To integrate with the frontend, use the auth-client.ts:
+
+```typescript
+// Example usage in React component
+import { authClient } from '@auth/client';
+
+// Login
+const handleLogin = async (email, password) => {
+  const result = await authClient.login(email, password);
+  if (result.success) {
+    // Store tokens and redirect
+    localStorage.setItem('accessToken', result.tokens.accessToken);
+    sessionStorage.setItem('user', JSON.stringify(result.user));
+    // Use httpOnly cookies for refreshToken (handled by the API)
+  }
+};
+
+// Get user profile
+const getUserProfile = async () => {
+  const result = await authClient.getUser();
+  if (result.success) {
+    setUserProfile(result.user);
+  }
+};
+
+// Logout
+const handleLogout = async () => {
+  await authClient.logout();
+  localStorage.removeItem('accessToken');
+  sessionStorage.removeItem('user');
+};
+```
+
+### Backend Integration
+
+For backend services to validate tokens:
+
+```python
+# Example Python FastAPI integration
+from app.auth.client import validate_token
+
+async def get_current_user(token: str = Depends(oauth2_scheme)):
+    validation = await validate_token(token)
+    if not validation["success"] or not validation["isValid"]:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return validation["claims"]
+```
