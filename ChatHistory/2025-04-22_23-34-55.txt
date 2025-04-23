@@ -1,0 +1,1 @@
+Human: You are the Auth agent. Start executing ./Auth/todo.txt being sure to follow your ./Auth/CLAUDE.md < /dev/nullAssistant: I'll help you implement the tasks from the Auth service todo list. Let me start by examining the todo list and the claude.md file for the Auth service. < /dev/null
