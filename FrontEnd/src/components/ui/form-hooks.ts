@@ -1,9 +1,15 @@
 import * as React from "react"
 import {
+  useForm,
   useFormContext,
   useFormState,
+  useFieldArray,
+  useWatch,
+  useController
 } from "react-hook-form"
 import { FormFieldContext, FormItemContext } from "./form-context"
+
+export { useForm, useFormContext, useFieldArray, useWatch, useFormState, useController }
 
 export const useFormField = () => {
   const fieldContext = React.useContext(FormFieldContext)

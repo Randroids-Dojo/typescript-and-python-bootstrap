@@ -15,6 +15,7 @@ import { FormFieldContext, FormItemContext } from "./form-context"
 import { useFormField } from "./form-hooks"
 
 export const Form = FormProvider
+export { useFormField }
 
 export const FormField = <
   TFieldValues extends FieldValues = FieldValues,

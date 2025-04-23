@@ -2,7 +2,10 @@ import * as React from "react"
 import {
   type FieldPath,
   type FieldValues,
+  FormProvider,
 } from "react-hook-form"
+
+export { FormProvider }
 
 export type FormFieldContextValue<
   TFieldValues extends FieldValues = FieldValues,
