@@ -1,0 +1,52 @@
+# FrontEnd TODO List
+
+1. Initialize React TypeScript project with Vite
+   - Set up project structure
+   - Configure TypeScript
+   - Install dependencies
+
+2. Set up shadcn components
+   - Install and configure shadcn/ui
+   - Set up theming
+
+3. Create basic layout components
+   - Header/Navbar
+   - Footer
+   - Main content area
+   - Sidebar (if needed)
+
+4. Implement authentication UI
+   - Login form
+   - Registration form
+   - Password reset flow
+   - Auth state management
+
+5. Create API service layer
+   - Set up Axios or fetch with interceptors
+   - Create service functions for backend endpoints
+   - Handle auth tokens and refreshing
+
+6. Implement core application pages
+   - Dashboard/Home
+   - User profile
+   - Settings
+   - Any feature-specific pages
+
+7. Add responsive design
+   - Ensure UI works on mobile, tablet, and desktop
+   - Implement responsive navigation
+
+8. Write tests
+   - Unit tests for components
+   - Integration tests for user flows
+
+9. Configure Docker Compose setup (REQUIRED - all local development must use Docker Compose)
+   - Create/update Dockerfile for the frontend service
+   - Ensure proper integration with the docker-compose.yml at the root
+   - Configure for local development with other services
+   - Ensure all npm commands run inside the container
+   - Use scripts/start.sh to launch all services together
+
+10. Implement CI/CD pipeline integration
+    - Add necessary configuration for GitHub Actions
+    - Set up build and deployment workflow

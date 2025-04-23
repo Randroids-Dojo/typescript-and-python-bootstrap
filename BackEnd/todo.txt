@@ -1,0 +1,50 @@
+# BackEnd TODO List
+
+1. Initialize FastAPI project
+   - Set up project structure
+   - Configure dependencies
+   - Set up Docker configuration (REQUIRED - all local development must use Docker Compose)
+   - Ensure proper integration with the docker-compose.yml at the root
+   - Use scripts/start.sh to launch all services together
+
+2. Configure database connections
+   - Set up SQLAlchemy
+   - Create base models
+   - Configure Alembic for migrations
+
+3. Implement core database models
+   - User model (synchronized with Auth service)
+   - Any application-specific models
+
+4. Configure authentication middleware
+   - JWT validation
+   - User authorization
+   - Role-based access control
+
+5. Implement API endpoints
+   - User operations (get profile, update profile, etc.)
+   - Application-specific endpoints
+   - Health check endpoint
+
+6. Set up Redis caching
+   - Configure Redis connection
+   - Implement caching for appropriate endpoints
+
+7. Implement error handling
+   - Custom exception handlers
+   - Proper HTTP status codes
+   - Informative error messages
+
+8. Write tests
+   - Unit tests for services and utilities
+   - Integration tests for API endpoints
+
+9. Configure for production
+   - Security headers
+   - Rate limiting
+   - Logging
+
+10. Set up documentation
+    - Configure OpenAPI/Swagger
+    - Add request/response examples
+    - Document authentication flows

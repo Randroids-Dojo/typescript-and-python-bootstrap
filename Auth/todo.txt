@@ -1,0 +1,59 @@
+# Auth Service TODO List
+
+1. Initialize Node.js project
+   - Set up project structure
+   - Configure dependencies
+   - Set up Docker configuration (REQUIRED - all local development must use Docker Compose)
+   - Ensure proper integration with the docker-compose.yml at the root
+   - Use scripts/start.sh to launch all services together
+
+2. Configure database connection
+   - Set up PostgreSQL connection
+   - Create user schema and migrations
+   - Implement database models
+
+3. Implement core authentication functionality
+   - User registration with email verification
+   - User login with JWT generation
+   - Password hashing implementation
+   - Token refresh mechanism
+   - Password reset flow
+
+4. Create API endpoints
+   - Register endpoint
+   - Login endpoint
+   - Token refresh endpoint
+   - Password reset endpoints
+   - User info endpoint
+   - Token validation endpoint
+
+5. Implement security features
+   - Rate limiting
+   - Input validation and sanitization
+   - Secure HTTP headers
+   - CSRF protection
+
+6. Set up email functionality
+   - Configure email service
+   - Create email templates
+   - Implement sending verification and reset emails
+
+7. Implement logging and monitoring
+   - Set up structured logging
+   - Implement error tracking
+   - Add security audit logging
+
+8. Write tests
+   - Unit tests for authentication functions
+   - Integration tests for API endpoints
+   - Security testing
+
+9. Create documentation
+   - API documentation
+   - Authentication flow documentation
+   - Integration guide for other services
+
+10. Configure for production
+    - Secure environment variables
+    - Production-ready server configuration
+    - CI/CD pipeline integration
