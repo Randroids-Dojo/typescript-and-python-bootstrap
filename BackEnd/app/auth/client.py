@@ -61,37 +61,78 @@ async def stop_token_cleanup_task():
         _cleanup_task = None
         logger.info("BetterAuth token cleanup background task stopped")
 
-try:
-    # Initialize the BetterAuth client for authentication operations
-    auth_client = BetterAuthClient(
-        base_url=os.getenv("AUTH_SERVICE_URL", "http://auth:4000/api/auth"),
-        cache_redis_url=os.getenv("REDIS_URL", "redis://redis:6379/0"),
-        client_id=os.getenv("BETTER_AUTH_CLIENT_ID", "backend-service"),
-        client_secret=os.getenv("BETTER_AUTH_CLIENT_SECRET", "backend-service-secret"),
-        token_cleanup_interval=int(os.getenv("BETTER_AUTH_TOKEN_CLEANUP_INTERVAL", "3600")),  # 1 hour default
-        connection_timeout=int(os.getenv("BETTER_AUTH_CONNECTION_TIMEOUT", "5")),  # 5 seconds default
-        cache_ttl=int(os.getenv("BETTER_AUTH_CACHE_TTL", "300"))  # 5 minutes default
-    )
+# Configure the retry policy for initialization
+max_init_retries = int(os.getenv("BETTER_AUTH_INIT_RETRIES", "3"))
+init_retry_delay = float(os.getenv("BETTER_AUTH_INIT_RETRY_DELAY", "0.5"))
+fallback_to_offline = os.getenv("BETTER_AUTH_FALLBACK_TO_OFFLINE", "true").lower() in ("true", "1", "yes", "y", "t")
+
+async def initialize_auth_client():
+    """Initialize the auth client with retries and graceful fallback"""
+    global auth_client
     
-    # We'll check the health later in the startup process
-    logger.info("BetterAuth client initialized successfully")
+    base_url = os.getenv("AUTH_SERVICE_URL", "http://auth:4000/api/auth")
+    cache_redis_url = os.getenv("REDIS_URL", "redis://redis:6379/0")
     
-except BetterAuthConnectionError as e:
-    logger.error(f"Failed to connect to BetterAuth service: {e}")
-    # Initialize with offline mode to avoid blocking the application startup
-    auth_client = BetterAuthClient(
-        base_url=os.getenv("AUTH_SERVICE_URL", "http://auth:4000/api/auth"),
-        offline_mode=True
-    )
-    logger.warning("BetterAuth client initialized in offline mode - authentication will not work")
-    
-except BetterAuthConfigError as e:
-    logger.error(f"Invalid BetterAuth configuration: {e}")
-    raise
-    
-except Exception as e:
-    logger.error(f"Unexpected error initializing BetterAuth client: {e}")
-    raise
+    for attempt in range(max_init_retries):
+        try:
+            # Initialize the BetterAuth client
+            client = BetterAuthClient(
+                base_url=base_url,
+                cache_redis_url=cache_redis_url,
+                client_id=os.getenv("BETTER_AUTH_CLIENT_ID", "backend-service"),
+                client_secret=os.getenv("BETTER_AUTH_CLIENT_SECRET", "backend-service-secret"),
+                token_cleanup_interval=int(os.getenv("BETTER_AUTH_TOKEN_CLEANUP_INTERVAL", "3600")),
+                connection_timeout=int(os.getenv("BETTER_AUTH_CONNECTION_TIMEOUT", "5")),
+                cache_ttl=int(os.getenv("BETTER_AUTH_CACHE_TTL", "300"))
+            )
+            
+            # Test connection if not in testing mode
+            if "pytest" not in sys.modules:
+                is_healthy = await client.health_check()
+                if not is_healthy and attempt < max_init_retries - 1:
+                    logger.warning(f"Auth service health check failed (attempt {attempt+1}/{max_init_retries}), retrying...")
+                    await asyncio.sleep(init_retry_delay * (attempt + 1))
+                    continue
+                    
+                if not is_healthy and fallback_to_offline:
+                    logger.warning("Auth service health check failed after retries, falling back to offline mode")
+                    auth_client = BetterAuthClient(base_url=base_url, offline_mode=True)
+                    return
+            
+            # If we made it here, the client is working (or we're in testing mode)
+            auth_client = client
+            logger.info("BetterAuth client initialized successfully")
+            return
+            
+        except BetterAuthConnectionError as e:
+            logger.error(f"Failed to connect to BetterAuth service (attempt {attempt+1}/{max_init_retries}): {e}")
+            if attempt < max_init_retries - 1:
+                await asyncio.sleep(init_retry_delay * (attempt + 1))
+                continue
+                
+            if fallback_to_offline:
+                logger.warning("Falling back to offline mode after connection failures")
+                auth_client = BetterAuthClient(base_url=base_url, offline_mode=True)
+                return
+            raise
+            
+        except BetterAuthConfigError as e:
+            logger.error(f"Invalid BetterAuth configuration: {e}")
+            raise
+            
+        except Exception as e:
+            logger.error(f"Unexpected error initializing BetterAuth client: {e}")
+            if attempt < max_init_retries - 1:
+                await asyncio.sleep(init_retry_delay * (attempt + 1))
+                continue
+            raise
+
+# For synchronous import contexts, initialize with a placeholder offline client
+# This will be replaced with the proper client during application startup
+auth_client = BetterAuthClient(
+    base_url=os.getenv("AUTH_SERVICE_URL", "http://auth:4000/api/auth"),
+    offline_mode=True
+)
 
 # Functions to handle token refresh and session validation
 async def refresh_token(refresh_token: str):

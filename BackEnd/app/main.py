@@ -1,4 +1,5 @@
 import logging
+import os
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
@@ -95,6 +96,14 @@ async def startup_event():
     """Initialize resources on application startup"""
     logger.info("Application starting up")
     
+    # Initialize the BetterAuth client
+    try:
+        from app.auth.client import initialize_auth_client
+        await initialize_auth_client()
+        logger.info("BetterAuth client initialization completed")
+    except Exception as e:
+        logger.error(f"Failed to initialize BetterAuth client: {e}")
+    
     # Start BetterAuth token cleanup task
     try:
         await start_token_cleanup_task()
@@ -108,7 +117,9 @@ async def startup_event():
         if is_healthy:
             logger.info("Auth service health check: OK")
         else:
-            logger.warning("Auth service health check: DEGRADED")
+            logger.warning("Auth service health check: DEGRADED - service may be unavailable")
+            logger.warning("The application will continue to function with reduced auth capabilities")
+            logger.warning("Auth operations will use cached values when possible or fallback behaviors")
     except Exception as e:
         logger.error(f"Auth service health check failed: {e}")
     
@@ -160,13 +171,32 @@ async def detailed_health_check():
     # Check Auth service connectivity
     try:
         auth_status = await auth_client.health_check()
-        health["components"]["auth_service"] = "healthy" if auth_status else "degraded"
-        if not auth_status:
-            health["status"] = "degraded"
+        if auth_status:
+            health["components"]["auth_service"] = "healthy"
+        else:
+            # If offline mode is active, show that in the health status
+            if auth_client.offline_mode:
+                health["components"]["auth_service"] = "offline"
+                health["status"] = "degraded"
+                logger.warning("Auth service is in offline mode")
+            else:
+                health["components"]["auth_service"] = "degraded"
+                health["status"] = "degraded"
+                logger.warning("Auth service health check reports degraded status")
     except Exception as e:
         logger.error(f"Auth service health check failed: {e}")
         health["components"]["auth_service"] = "unhealthy"
         health["status"] = "degraded"
+        
+    # Add additional information about fallback status
+    if health["components"]["auth_service"] != "healthy":
+        fallback_enabled = os.getenv("BETTER_AUTH_FALLBACK_MODE", "true").lower() in ("true", "1", "yes", "y", "t")
+        limited_access = os.getenv("BETTER_AUTH_ALLOW_LIMITED_ACCESS", "false").lower() in ("true", "1", "yes", "y", "t")
+        health["auth_fallback"] = {
+            "enabled": fallback_enabled,
+            "limited_access": limited_access,
+            "offline_mode": getattr(auth_client, "offline_mode", False)
+        }
     
     return health
 

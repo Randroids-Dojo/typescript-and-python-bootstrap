@@ -1,4 +1,5 @@
 import logging
+import os
 from typing import List, Optional, Set, Union, Callable
 from fastapi import Depends, HTTPException, Request
 from app.middleware.auth import verify_token
@@ -24,6 +25,16 @@ def require_admin(session = Depends(verify_token)):
     Raises:
         HTTPException: if user lacks admin role
     """
+    # Check if we're in fallback mode with limited access
+    from app.auth.client import auth_client
+    if getattr(auth_client, "offline_mode", False) and session.user.id == "fallback-user":
+        # Check if admin access is allowed in fallback mode
+        allow_admin_in_fallback = os.getenv("BETTER_AUTH_ALLOW_ADMIN_IN_FALLBACK", "false").lower() in ("true", "1", "yes", "y", "t")
+        if allow_admin_in_fallback:
+            logger.warning(f"Allowing admin access in fallback mode")
+            return session
+            
+    # Normal role check
     if "admin" not in session.user.roles:
         logger.warning(f"Admin access attempt by unauthorized user: {session.user.id}")
         raise HTTPException(status_code=403, detail="Admin access required")
@@ -47,6 +58,20 @@ def require_roles(required_roles: Union[str, List[str]], any_role: bool = False)
     required_set = set(required_roles)
     
     async def _check_roles(session = Depends(verify_token)):
+        # Check if we're in fallback mode with limited access
+        from app.auth.client import auth_client
+        if getattr(auth_client, "offline_mode", False) and session.user.id == "fallback-user":
+            # Check role bypass config for fallback mode
+            allow_role_bypass = os.getenv("BETTER_AUTH_ALLOW_ROLE_BYPASS", "false").lower() in ("true", "1", "yes", "y", "t")
+            
+            if allow_role_bypass:
+                # Check if the specific roles or any role access is allowed in fallback
+                bypassed_roles = os.getenv("BETTER_AUTH_BYPASSED_ROLES", "").split(",")
+                if any(role in bypassed_roles for role in required_roles) or "all" in bypassed_roles:
+                    logger.warning(f"Bypassing role check for {required_roles} in fallback mode")
+                    return session
+                    
+        # Normal role check
         user_roles = set(session.user.roles)
         
         if any_role:

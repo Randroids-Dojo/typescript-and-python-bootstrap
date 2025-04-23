@@ -1,5 +1,6 @@
 import logging
 import time
+import os
 from fastapi import Request, HTTPException, Depends
 from app.auth.better_auth import BetterAuthConnectionError, BetterAuthValidationError
 from app.auth.client import auth_client
@@ -79,6 +80,53 @@ async def verify_token(request: Request):
         
     except BetterAuthConnectionError as e:
         logger.error(f"BetterAuth service connection error: {e}")
+        
+        # Check if we should use fallback mode
+        fallback_enabled = os.getenv("BETTER_AUTH_FALLBACK_MODE", "true").lower() in ("true", "1", "yes", "y", "t")
+        if not fallback_enabled:
+            raise HTTPException(
+                status_code=503, 
+                detail="Authentication service unavailable, please try again later"
+            )
+            
+        # Try to get cached user session if available
+        try:
+            from app.utils.redis import get_cache
+            import json
+            
+            # Check for cached session data
+            cache_key = f"auth:token:{token[:20]}"
+            cached_data = await get_cache(cache_key)
+            
+            if cached_data:
+                logger.warning(f"Using cached auth data due to Auth service unavailability")
+                session = json.loads(cached_data)
+                request.state.user = session.get("user")
+                return session
+        except Exception as cache_error:
+            logger.error(f"Failed to retrieve cached auth data: {cache_error}")
+        
+        # If we reached here, we can't authenticate properly
+        # Check if we should allow fallback access with limited privileges
+        allow_limited_access = os.getenv("BETTER_AUTH_ALLOW_LIMITED_ACCESS", "false").lower() in ("true", "1", "yes", "y", "t")
+        
+        if allow_limited_access:
+            # Provide limited access with basic privileges
+            logger.warning(f"Providing limited access due to Auth service unavailability")
+            session = {
+                "user": {
+                    "id": "fallback-user",
+                    "email": "fallback@example.com",
+                    "roles": ["limited"],
+                    "is_active": True,
+                    "permissions": ["read:basic"]
+                },
+                "exp": int(time.time() + 300)  # Short expiration
+            }
+            request.state.user = session["user"]
+            return session
+        
+        # Otherwise deny access with helpful message
         raise HTTPException(
             status_code=503, 
             detail="Authentication service unavailable, please try again later"
