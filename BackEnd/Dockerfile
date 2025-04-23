@@ -2,9 +2,22 @@ FROM python:3.9-slim
 
 WORKDIR /app
 
-COPY requirements.txt .
+# Install Node.js for npm scripts
+RUN apt-get update && apt-get install -y \
+    curl \
+    gnupg \
+    nodejs \
+    npm \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements.txt package.json ./
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir pytest ruff && \
+    # Make sure pytest and ruff are in PATH
+    pip list
 
 COPY . .
 

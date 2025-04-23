@@ -8,7 +8,7 @@ docker compose run --rm frontend npm run lint
 
 # Backend linting
 echo "Linting Backend..."
-docker compose run --rm backend ruff check .
+docker compose run --rm backend npm run lint
 
 # Auth linting
 echo "Linting Auth..."
