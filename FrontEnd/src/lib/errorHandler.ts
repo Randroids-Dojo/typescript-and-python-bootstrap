@@ -3,9 +3,11 @@ import { toast } from 'sonner';
 // Error types for categorization
 export enum ErrorType {
   AUTH = 'authentication',
+  AUTH_SERVICE = 'auth_service', // New type for auth service failures
   VALIDATION = 'validation',
   SERVER = 'server',
   NETWORK = 'network',
+  RETRYABLE = 'retryable', // New type for retryable errors
   UNKNOWN = 'unknown',
 }
 
@@ -15,6 +17,7 @@ export interface AppError {
   message: string;
   details?: unknown;
   statusCode?: number;
+  isRetryable?: boolean;
 }
 
 /**
@@ -24,6 +27,37 @@ export function categorizeError(error: unknown): AppError {
   // Already structured error
   if (typeof error === 'object' && error !== null && 'type' in error && 'message' in error) {
     return error as AppError;
+  }
+
+  // Check for auth service errors (from BetterAuth client)
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    typeof error.code === 'string' &&
+    'message' in error
+  ) {
+    const errorCode = error.code as string;
+    const message = String(error.message);
+    
+    // Auth service unavailable errors
+    if (errorCode === 'AUTH_SERVICE_UNAVAILABLE') {
+      return {
+        type: ErrorType.AUTH_SERVICE,
+        message: 'Authentication service unavailable',
+        details: error,
+        isRetryable: 'isRetryable' in error && Boolean(error.isRetryable),
+      };
+    }
+    
+    // Auth-related errors
+    if (errorCode.includes('AUTH_') || errorCode.includes('TOKEN_')) {
+      return {
+        type: ErrorType.AUTH,
+        message,
+        details: error,
+      };
+    }
   }
 
   // API error with status code
@@ -56,6 +90,18 @@ export function categorizeError(error: unknown): AppError {
       };
     }
     
+    // Retryable server errors
+    if (statusCode === 429 || statusCode === 503 || statusCode === 504) {
+      return {
+        type: ErrorType.RETRYABLE,
+        message: statusCode === 429 
+          ? 'Too many requests, please try again later' 
+          : 'Service temporarily unavailable',
+        details: error,
+        statusCode,
+      };
+    }
+    
     // Server errors
     if (statusCode >= 500) {
       return {
@@ -81,6 +127,20 @@ export function categorizeError(error: unknown): AppError {
       type: ErrorType.NETWORK,
       message: 'Network error, please check your connection',
       details: error,
+      isRetryable: true,
+    };
+  }
+  
+  // Specific error messages that suggest auth service issues
+  if (error instanceof Error && (
+    error.message.includes('auth service') || 
+    error.message.includes('authentication service')
+  )) {
+    return {
+      type: ErrorType.AUTH_SERVICE,
+      message: 'Authentication service unavailable',
+      details: error,
+      isRetryable: true,
     };
   }
 
@@ -107,10 +167,26 @@ export function notifyError(error: unknown): void {
       });
       break;
       
+    case ErrorType.AUTH_SERVICE:
+      toast.error(appError.message, {
+        description: 'Please try again later or contact support if the problem persists',
+        id: 'auth-service-error',
+        duration: 5000,
+      });
+      break;
+      
     case ErrorType.VALIDATION:
       toast.error(appError.message, {
         description: 'Please check your input and try again',
         id: 'validation-error',
+      });
+      break;
+      
+    case ErrorType.RETRYABLE:
+      toast.error(appError.message, {
+        description: 'This operation will be retried automatically',
+        id: 'retryable-error',
+        duration: 3000,
       });
       break;
       

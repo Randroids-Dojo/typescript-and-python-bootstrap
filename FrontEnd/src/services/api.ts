@@ -10,6 +10,15 @@ const defaultOptions: RequestInit = {
   },
 };
 
+// Retry configuration
+const RETRY_CONFIG = {
+  maxRetries: 3,
+  initialDelay: 300,
+  backoffFactor: 2,
+  retryableStatusCodes: [408, 429, 500, 502, 503, 504],
+  retryableNetworkErrors: ['ECONNRESET', 'ETIMEDOUT', 'ENOTFOUND', 'Failed to fetch']
+};
+
 // Interface for API error responses
 interface ApiError {
   status: number;
@@ -70,25 +79,83 @@ const handleResponse = async <T>(response: Response): Promise<ApiResponse<T>> =>
 
 // Function to add authentication headers to requests
 const withAuth = async (options: RequestInit = {}): Promise<RequestInit> => {
-  const session = authClient.useSession();
-  
-  if (session.status !== 'authenticated') {
+  try {
+    const session = authClient.useSession();
+    
+    if (session.status !== 'authenticated') {
+      return options;
+    }
+    
+    try {
+      const token = await authClient.refreshToken();
+      
+      if (!token) {
+        console.warn('Auth token refresh failed - proceeding without auth header');
+        return options;
+      }
+      
+      return {
+        ...options,
+        headers: {
+          ...options.headers,
+          Authorization: `Bearer ${token.token}`,
+        },
+      };
+    } catch (tokenError) {
+      console.error('[Auth Token Error]', tokenError);
+      // Still return options without auth headers to allow non-authenticated requests
+      return options;
+    }
+  } catch (error) {
+    console.error('[Auth Session Error]', error);
     return options;
   }
-  
-  const token = await authClient.refreshToken();
-  
-  if (!token) {
-    return options;
+};
+
+// Function to implement retry logic with exponential backoff
+const fetchWithRetry = async <T>(
+  url: string, 
+  options: RequestInit, 
+  retryCount = 0
+): Promise<ApiResponse<T>> => {
+  try {
+    const response = await fetch(url, options);
+    
+    // Check if we should retry based on status code
+    if (
+      RETRY_CONFIG.retryableStatusCodes.includes(response.status) && 
+      retryCount < RETRY_CONFIG.maxRetries
+    ) {
+      const delay = RETRY_CONFIG.initialDelay * Math.pow(RETRY_CONFIG.backoffFactor, retryCount);
+      console.warn(`Retrying failed request to ${url} (attempt ${retryCount + 1}/${RETRY_CONFIG.maxRetries})`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return fetchWithRetry<T>(url, options, retryCount + 1);
+    }
+    
+    return handleResponse<T>(response);
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    
+    // Check if we should retry based on network error type
+    const shouldRetry = RETRY_CONFIG.retryableNetworkErrors.some(netErr => 
+      errorMessage.includes(netErr)
+    );
+    
+    if (shouldRetry && retryCount < RETRY_CONFIG.maxRetries) {
+      const delay = RETRY_CONFIG.initialDelay * Math.pow(RETRY_CONFIG.backoffFactor, retryCount);
+      console.warn(`Retrying failed request to ${url} due to network error (attempt ${retryCount + 1}/${RETRY_CONFIG.maxRetries})`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return fetchWithRetry<T>(url, options, retryCount + 1);
+    }
+    
+    return {
+      error: {
+        status: 500,
+        message: 'Failed to make request after all retry attempts',
+        details: errorMessage,
+      },
+    };
   }
-  
-  return {
-    ...options,
-    headers: {
-      ...options.headers,
-      Authorization: `Bearer ${token.token}`,
-    },
-  };
 };
 
 // Basic API client with CRUD methods
@@ -97,12 +164,11 @@ export const apiClient = {
   async get<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
     try {
       const authOptions = await withAuth(options);
-      const response = await fetch(`${API_URL}${endpoint}`, {
+      return fetchWithRetry<T>(`${API_URL}${endpoint}`, {
         ...defaultOptions,
         ...authOptions,
         method: 'GET',
       });
-      return handleResponse<T>(response);
     } catch (err) {
       return {
         error: {
@@ -118,13 +184,12 @@ export const apiClient = {
   async post<T>(endpoint: string, data: unknown, options: RequestInit = {}): Promise<ApiResponse<T>> {
     try {
       const authOptions = await withAuth(options);
-      const response = await fetch(`${API_URL}${endpoint}`, {
+      return fetchWithRetry<T>(`${API_URL}${endpoint}`, {
         ...defaultOptions,
         ...authOptions,
         method: 'POST',
         body: JSON.stringify(data),
       });
-      return handleResponse<T>(response);
     } catch (err) {
       return {
         error: {
@@ -140,13 +205,12 @@ export const apiClient = {
   async put<T>(endpoint: string, data: unknown, options: RequestInit = {}): Promise<ApiResponse<T>> {
     try {
       const authOptions = await withAuth(options);
-      const response = await fetch(`${API_URL}${endpoint}`, {
+      return fetchWithRetry<T>(`${API_URL}${endpoint}`, {
         ...defaultOptions,
         ...authOptions,
         method: 'PUT',
         body: JSON.stringify(data),
       });
-      return handleResponse<T>(response);
     } catch (err) {
       return {
         error: {
@@ -162,13 +226,12 @@ export const apiClient = {
   async patch<T>(endpoint: string, data: unknown, options: RequestInit = {}): Promise<ApiResponse<T>> {
     try {
       const authOptions = await withAuth(options);
-      const response = await fetch(`${API_URL}${endpoint}`, {
+      return fetchWithRetry<T>(`${API_URL}${endpoint}`, {
         ...defaultOptions,
         ...authOptions,
         method: 'PATCH',
         body: JSON.stringify(data),
       });
-      return handleResponse<T>(response);
     } catch (err) {
       return {
         error: {
@@ -184,12 +247,11 @@ export const apiClient = {
   async delete<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
     try {
       const authOptions = await withAuth(options);
-      const response = await fetch(`${API_URL}${endpoint}`, {
+      return fetchWithRetry<T>(`${API_URL}${endpoint}`, {
         ...defaultOptions,
         ...authOptions,
         method: 'DELETE',
       });
-      return handleResponse<T>(response);
     } catch (err) {
       return {
         error: {

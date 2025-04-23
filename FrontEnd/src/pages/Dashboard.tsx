@@ -2,7 +2,8 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/auth-hooks';
+import { Session } from '@/lib/auth';
 
 export function Dashboard() {
   const { user, isAuthenticated, logout, sessions, revokeSession, refreshSessions } = useAuth();
@@ -103,7 +104,7 @@ export function Dashboard() {
               <p className="text-muted-foreground">No active sessions found.</p>
             ) : (
               <div className="space-y-4">
-                {sessions.map((session) => (
+                {sessions.map((session: Session) => (
                   <div key={session.id} className="flex items-center justify-between border-b pb-4">
                     <div>
                       <p className="font-medium">{session.device || 'Unknown Device'}</p>

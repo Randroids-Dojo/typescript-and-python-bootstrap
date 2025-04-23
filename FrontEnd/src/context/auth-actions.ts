@@ -4,11 +4,7 @@ export const authActions = {
   // Function to handle login
   handleLogin: async (email: string, password: string) => {
     try {
-      return await authClient.signIn.email({
-        email,
-        password,
-        callbackURL: '/dashboard'
-      });
+      return await authClient.login(email, password);
     } catch (error) {
       console.error('Login error:', error);
       throw error;
@@ -18,12 +14,7 @@ export const authActions = {
   // Function to handle registration
   handleRegister: async (email: string, password: string, name: string) => {
     try {
-      return await authClient.signUp.email({
-        email,
-        password,
-        name,
-        callbackURL: '/dashboard'
-      });
+      return await authClient.register({ email, password, name });
     } catch (error) {
       console.error('Registration error:', error);
       throw error;
@@ -33,7 +24,7 @@ export const authActions = {
   // Function to handle logout
   handleLogout: async () => {
     try {
-      return await authClient.signOut({});
+      return await authClient.logout();
     } catch (error) {
       console.error('Logout error:', error);
       throw error;
@@ -50,20 +41,32 @@ export const authActions = {
     }
   },
 
-  // Function to get all sessions
+  // Function to get all sessions - mocked for now
   getSessions: async () => {
     try {
-      return await authClient.getSessions();
+      // Mock session data
+      return [
+        {
+          id: '1',
+          userId: '1',
+          expiresAt: new Date(Date.now() + 86400000).toISOString(),
+          createdAt: new Date().toISOString(),
+          device: 'Current Device',
+          lastActive: new Date().toISOString(),
+          ip: '127.0.0.1'
+        }
+      ];
     } catch (error) {
       console.error('Error getting sessions:', error);
       throw error;
     }
   },
 
-  // Function to revoke a session
+  // Function to revoke a session - mocked for now
   revokeSession: async (sessionId: string) => {
     try {
-      return await authClient.revokeSession(sessionId);
+      console.log(`Mock revoking session ${sessionId}`);
+      return true;
     } catch (error) {
       console.error('Error revoking session:', error);
       throw error;

@@ -15,7 +15,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/auth-hooks';
 import { notifySuccess, notifyError } from '@/lib/errorHandler';
 
 const formSchema = z.object({

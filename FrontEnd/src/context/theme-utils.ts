@@ -1,4 +1,4 @@
-import { Theme } from './ThemeContext';
+import { Theme } from './theme-context';
 
 export const applyTheme = (theme: Theme) => {
   const root = window.document.documentElement;
