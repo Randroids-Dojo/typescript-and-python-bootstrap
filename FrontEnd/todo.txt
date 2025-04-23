@@ -1,6 +1,29 @@
 # FrontEnd ToDo List
 
-## Initial Setup
+## Issues to Address
+
+1. Docker Compose is not installed or not in PATH
+   - Install Docker Desktop or Docker Compose CLI using appropriate method for OS
+   - Verify installation with `docker-compose --version`
+   - Ensure Docker service is running
+
+2. Environment files are missing
+   - Create .env file from .env.example template
+   - Verify all required environment variables are set correctly
+
+3. Component integration issues
+   - Review integration between AuthContext and API services
+   - Fix any import or dependency issues
+   - Ensure proper error handling for auth failures
+
+4. Testing framework configuration
+   - Complete Vitest setup and configuration
+   - Add missing test cases for authentication flow
+   - Implement mock for BetterAuth client in tests
+
+## Original ToDo Items
+
+### Initial Setup
 
 1. Create Dockerfile and .dockerignore
 2. Initialize React TypeScript project with Vite
@@ -13,13 +36,13 @@
 4. Create .env.example with necessary environment variables
 5. Add linting configuration (ESLint, Prettier)
 
-## Project Structure
+### Project Structure
 
 1. Implement folder structure as outlined in claude.md
 2. Create basic layout components (header, footer, main layout)
 3. Create navigation structure
 
-## Core Functionality
+### Core Functionality
 
 1. Implement enhanced authentication flow with BetterAuth
    - Install BetterAuth client: `npm install better-auth`
@@ -87,7 +110,7 @@
    - Add security-related notifications (login from new device, etc.)
    - Create secure error logging (without sensitive information)
 
-## UI Development
+### UI Development
 
 1. Implement responsive layout design
 2. Create form components with validation using shadcn/ui Form components
@@ -100,19 +123,19 @@
 7. Create navigation using shadcn/ui NavigationMenu component
 8. Implement dropdown menus with shadcn/ui DropdownMenu component
 
-## Testing
+### Testing
 
 1. Set up testing framework (Vitest, React Testing Library)
 2. Write unit tests for key components
 3. Implement integration tests for major user flows
 
-## Docker Integration
+### Docker Integration
 
 1. Ensure Dockerfile correctly builds and serves the application
 2. Test the application running in Docker container
 3. Verify connection to backend and auth services within Docker Compose network
 
-## Documentation
+### Documentation
 
 1. Add component documentation
 2. Document API integration points

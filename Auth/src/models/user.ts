@@ -148,7 +148,7 @@ class UserModel {
         [userId]
       );
       
-      return result.rowCount > 0;
+      return result.rowCount !== null && result.rowCount > 0;
     } catch (error) {
       console.error('Error incrementing token version:', error);
       throw error;

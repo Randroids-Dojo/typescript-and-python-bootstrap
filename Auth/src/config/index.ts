@@ -11,6 +11,10 @@ export const JWT_SECRET = process.env.JWT_SECRET || 'development-jwt-secret';
 export const JWT_ACCESS_EXPIRATION = process.env.JWT_ACCESS_EXPIRATION || '15m';
 export const JWT_REFRESH_EXPIRATION = process.env.JWT_REFRESH_EXPIRATION || '7d';
 
+// BetterAuth configuration
+export const BETTER_AUTH_SECRET = process.env.BETTER_AUTH_SECRET || 'your-secret-key-should-be-changed-in-production';
+export const BETTER_AUTH_URL = process.env.BETTER_AUTH_URL || 'http://localhost:4000';
+
 // Database configuration
 export const DB_CONFIG = {
   host: process.env.POSTGRES_HOST || 'localhost',

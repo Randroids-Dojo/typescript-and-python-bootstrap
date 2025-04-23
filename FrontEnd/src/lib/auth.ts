@@ -1,5 +1,15 @@
-// This is a mock implementation of the BetterAuth client
-// In a real project, you would use an actual authentication library
+import { betterAuth } from 'better-auth/client';
+
+// Initialize the real BetterAuth client
+const authInstance = betterAuth({
+  baseUrl: import.meta.env.VITE_AUTH_URL || 'http://localhost:4000/api'
+});
+
+export const authClient = authInstance.createClient();
+export default authClient;
+
+// The interface definitions below are kept for reference and type checking
+// The actual implementation is now using the real BetterAuth client
 
 interface AuthClient {
   signIn: {

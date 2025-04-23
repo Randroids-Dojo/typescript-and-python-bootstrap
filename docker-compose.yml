@@ -1,14 +1,12 @@
-version: '3.8'
-
 services:
   frontend:
-    build:
-      context: ./FrontEnd
+    image: node:18-alpine
+    working_dir: /app
+    command: sh -c "npm install && npm run dev"
     ports:
       - "3000:3000"
     volumes:
       - ./FrontEnd:/app
-      - /app/node_modules
     environment:
       - NODE_ENV=development
       - VITE_API_URL=http://localhost:8000
@@ -18,8 +16,9 @@ services:
       - auth
 
   backend:
-    build:
-      context: ./BackEnd
+    image: python:3.11-slim
+    working_dir: /app
+    command: sh -c "pip install -r requirements.txt && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
     ports:
       - "8000:8000"
     volumes:
@@ -35,19 +34,31 @@ services:
       - auth
 
   auth:
-    build:
-      context: ./Auth
+    image: node:18-alpine
+    working_dir: /app
+    command: sh -c "npm install && npm start"
     ports:
       - "4000:4000"
     volumes:
       - ./Auth:/app
-      - /app/node_modules
     environment:
       - NODE_ENV=development
       - PORT=4000
       - JWT_SECRET=development-jwt-secret
       - JWT_ACCESS_EXPIRATION=15m
       - JWT_REFRESH_EXPIRATION=7d
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=app
+      - REDIS_URL=redis://redis:6379/0
+      - CORS_ORIGINS=http://localhost:3000
+      - LOGIN_RATE_LIMIT_WINDOW=15
+      - LOGIN_RATE_LIMIT_MAX=5
+    depends_on:
+      - postgres
+      - redis
 
   postgres:
     image: postgres:14-alpine

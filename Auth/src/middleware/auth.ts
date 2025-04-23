@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import auth from '../auth';
 import { verifyAccessToken } from '../utils/jwt';
 import UserModel from '../models/user';
 
@@ -14,8 +15,35 @@ declare global {
   }
 }
 
-// Authentication middleware
+// Authentication middleware using BetterAuth
 export const authenticateJwt = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    // Use BetterAuth's built-in authentication
+    const session = await auth.api.getSession({
+      headers: req.headers as any,
+      cookies: req.cookies
+    });
+    
+    if (!session) {
+      res.status(401).json({ message: 'Authentication required' });
+      return;
+    }
+    
+    // Add user data to request
+    req.user = {
+      id: session.user.id,
+      role: session.user.role || 'user',
+    };
+    
+    next();
+  } catch (error) {
+    console.error('Authentication error:', error);
+    res.status(500).json({ message: 'Authentication error' });
+  }
+};
+
+// Legacy authentication middleware using our custom JWT implementation
+export const authenticateJwtLegacy = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     // Get token from Authorization header or cookie
     const token = 

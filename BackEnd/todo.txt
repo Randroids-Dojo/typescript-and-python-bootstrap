@@ -1,6 +1,30 @@
 # BackEnd ToDo List
 
-## Initial Setup
+## Issues to Address
+
+1. Docker Compose is not installed or not in PATH
+   - Install Docker Desktop or Docker Compose CLI using appropriate method for OS
+   - Verify installation with `docker-compose --version`
+   - Ensure Docker service is running
+
+2. Environment setup problems
+   - Create .env file from .env.example template
+   - Verify all required environment variables are set correctly
+   - Ensure database connection parameters are correct
+
+3. Integration issues with BetterAuth
+   - Verify BetterAuth client is properly configured
+   - Test token validation middleware in isolation
+   - Check authentication flow between services
+
+4. Test suite configuration
+   - Complete pytest configuration with proper fixtures
+   - Add database cleanup between tests
+   - Create mock for Auth service in tests
+
+## Original ToDo Items
+
+### Initial Setup
 
 1. Create Dockerfile and .dockerignore
 2. Initialize FastAPI project structure
@@ -19,7 +43,7 @@
 4. Create .env.example with necessary environment variables
 5. Set up linting configuration (flake8, black, isort)
 
-## Database Setup
+### Database Setup
 
 1. Create SQLAlchemy database models
 2. Set up Alembic for migrations
@@ -27,7 +51,7 @@
 4. Implement database connection and session management
 5. Set up Redis connection for caching
 
-## API Endpoints
+### API Endpoints
 
 1. Create API router structure
 2. Implement CRUD operations for main resources
@@ -35,7 +59,7 @@
 4. Implement proper error handling
 5. Document all endpoints with OpenAPI
 
-## Authentication & Authorization with BetterAuth
+### Authentication & Authorization with BetterAuth
 
 1. Implement enhanced BetterAuth validation middleware
    - Install BetterAuth client: `pip install better-auth-python`
@@ -111,27 +135,27 @@
    - Support step-up authentication for sensitive operations
    - Interface with Auth service for user management
 
-## Business Logic
+### Business Logic
 
 1. Implement service layer for business logic
 2. Add caching strategy using Redis
 3. Implement background tasks for async operations
 
-## Testing
+### Testing
 
 1. Set up pytest configuration
 2. Create test database fixtures
 3. Write unit tests for core functionality
 4. Implement integration tests for API endpoints
 
-## Docker Integration
+### Docker Integration
 
 1. Ensure Dockerfile correctly builds the application
 2. Test the application running in Docker container
 3. Verify connection to PostgreSQL and Redis within Docker Compose network
 4. Test integration with Auth service in Docker Compose network
 
-## Documentation
+### Documentation
 
 1. Document API endpoints with examples
 2. Create detailed setup instructions

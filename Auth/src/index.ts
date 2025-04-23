@@ -4,6 +4,7 @@ import { configureSecurityMiddleware } from './middleware/security';
 import authRoutes from './routes/auth';
 import { PORT } from './config';
 import UserModel from './models/user';
+import auth from './auth';
 
 // Create Express application
 const app = express();
@@ -16,19 +17,24 @@ app.use(cookieParser());
 // Configure security middleware
 configureSecurityMiddleware(app);
 
-// Initialize database schema
-const initializeDatabase = async () => {
+// Initialize BetterAuth and database
+const initialize = async () => {
   try {
+    // Initialize BetterAuth
+    await auth.initialize();
+    console.log('BetterAuth initialized');
+    
+    // Initialize database schema
     await UserModel.createSchema();
     console.log('Database schema initialized');
   } catch (error) {
-    console.error('Error initializing database schema:', error);
+    console.error('Error during initialization:', error);
     process.exit(1);
   }
 };
 
 // Configure routes
-app.use('/api/auth', authRoutes);
+app.use(authRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -54,8 +60,8 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 // Start the server
 const startServer = async () => {
   try {
-    // Initialize database
-    await initializeDatabase();
+    // Initialize BetterAuth and database
+    await initialize();
     
     // Start the server
     app.listen(PORT, () => {

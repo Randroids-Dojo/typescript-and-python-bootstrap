@@ -1,8 +1,13 @@
-import { Request, Response, NextFunction } from 'express';
+import * as express from 'express';
 import helmet from 'helmet';
 import csurf from 'csurf';
 import cors from 'cors';
 import { IS_PRODUCTION, CORS_ORIGINS } from '../config';
+
+// Define type for the request with csrfToken method
+interface RequestWithCSRF extends express.Request {
+  csrfToken(): string;
+}
 
 // Configure CORS options
 const corsOptions = {
@@ -24,12 +29,22 @@ const csrfProtection = csurf({
 });
 
 // Apply CSRF protection only to sensitive operations
-export const protectSensitiveOperation = (req: Request, res: Response, next: NextFunction): void => {
+export const protectSensitiveOperation = (
+  req: express.Request, 
+  res: express.Response, 
+  next: express.NextFunction
+): void => {
+  // @ts-ignore - ignore the type mismatch for now
   csrfProtection(req, res, next);
 };
 
 // Set CSRF token middleware
-export const setCsrfToken = (req: Request, res: Response, next: NextFunction): void => {
+export const setCsrfToken = (
+  req: express.Request, 
+  res: express.Response, 
+  next: express.NextFunction
+): void => {
+  // @ts-ignore - ignore the type mismatch for now
   csrfProtection(req, res, (error: any) => {
     if (error) {
       next(error);
@@ -37,7 +52,7 @@ export const setCsrfToken = (req: Request, res: Response, next: NextFunction): v
     }
     
     // Set CSRF token in response
-    res.cookie('XSRF-TOKEN', req.csrfToken(), {
+    res.cookie('XSRF-TOKEN', (req as RequestWithCSRF).csrfToken(), {
       secure: IS_PRODUCTION,
       sameSite: 'strict'
     });
@@ -47,7 +62,7 @@ export const setCsrfToken = (req: Request, res: Response, next: NextFunction): v
 };
 
 // Helper function to configure security middleware
-export const configureSecurityMiddleware = (app: any): void => {
+export const configureSecurityMiddleware = (app: express.Application): void => {
   // Apply security headers with Helmet
   app.use(helmet());
   
@@ -55,7 +70,7 @@ export const configureSecurityMiddleware = (app: any): void => {
   app.use(cors(corsOptions));
   
   // Add X-Content-Type-Options header
-  app.use((req: Request, res: Response, next: NextFunction) => {
+  app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('X-Frame-Options', 'DENY');
     res.setHeader('X-XSS-Protection', '1; mode=block');

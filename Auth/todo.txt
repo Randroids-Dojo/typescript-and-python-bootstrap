@@ -1,6 +1,30 @@
 # Auth Service ToDo List (BetterAuth Implementation)
 
-## Understanding BetterAuth
+## Issues to Address
+
+1. Docker Compose is not installed or not in PATH
+   - Install Docker Desktop or Docker Compose CLI using appropriate method for OS
+   - Verify installation with `docker-compose --version`
+   - Ensure Docker service is running
+
+2. Environment configuration issues
+   - Create .env file from .env.example template
+   - Verify all required environment variables are set correctly
+   - Generate proper JWT secret keys with sufficient entropy
+
+3. Integration issues with PostgreSQL and Redis
+   - Check database connection parameters
+   - Verify Redis connection for token storage and rate limiting
+   - Test database migrations in isolation
+
+4. Testing framework setup
+   - Complete Jest configuration with proper mocks
+   - Add database cleanup between tests
+   - Create comprehensive test coverage for auth flows
+
+## Original ToDo Items
+
+### Understanding BetterAuth
 
 BetterAuth is an authentication framework that provides secure user authentication for web applications. Implementation steps:
 
@@ -33,7 +57,7 @@ BetterAuth is an authentication framework that provides secure user authenticati
    - Provide documentation for frontend integration
    - Expose consistent API for frontend and backend services
 
-## Initial Setup
+### Initial Setup
 
 1. Create Dockerfile and .dockerignore
 2. Initialize Node.js project
@@ -64,7 +88,7 @@ BetterAuth is an authentication framework that provides secure user authenticati
 5. Configure TypeScript (tsconfig.json)
 6. Set up linting configuration (ESLint)
 
-## Project Structure
+### Project Structure
 
 1. Implement folder structure for BetterAuth integration:
    ```
@@ -89,7 +113,7 @@ BetterAuth is an authentication framework that provides secure user authenticati
 4. Implement PostgreSQL database connection for BetterAuth
 5. Set up Redis for rate limiting and token storage
 
-## Authentication Endpoints
+### Authentication Endpoints
 
 1. Configure BetterAuth instance in `auth.ts` file
    ```typescript
@@ -167,7 +191,7 @@ BetterAuth is an authentication framework that provides secure user authenticati
    - Configure callback handlers
    - Implement account linking
 
-## Enhanced Security Implementation
+### Enhanced Security Implementation
 
 1. Implement secure password hashing with bcrypt
    - Use proper salt rounds (minimum 12)
@@ -215,7 +239,7 @@ BetterAuth is an authentication framework that provides secure user authenticati
    - Implement email magic links with secure tokens
    - Add WebAuthn/FIDO2 support for biometric authentication
 
-## Testing
+### Testing
 
 1. Set up testing framework (Jest)
 2. Write comprehensive unit tests for security utilities
@@ -223,14 +247,14 @@ BetterAuth is an authentication framework that provides secure user authenticati
 4. Add security testing for token management
 5. Test rate limiting and brute force protection
 
-## Docker Integration
+### Docker Integration
 
 1. Ensure Dockerfile correctly builds the application
 2. Configure proper Redis integration in Docker Compose
 3. Test the application running in Docker container
 4. Verify the service is accessible from other containers in Docker Compose network
 
-## Documentation
+### Documentation
 
 1. Document all authentication endpoints with security considerations
 2. Create detailed setup instructions including security parameters
