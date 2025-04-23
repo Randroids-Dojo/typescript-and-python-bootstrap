@@ -11,8 +11,7 @@
    - alembic
    - psycopg2-binary
    - redis
-   - python-jose (for JWT validation)
-   - passlib (for password hashing)
+   - better-auth-python
    - pydantic
    - pytest
    - httpx (for testing and external API requests)
@@ -36,18 +35,81 @@
 4. Implement proper error handling
 5. Document all endpoints with OpenAPI
 
-## Authentication & Authorization
+## Authentication & Authorization with BetterAuth
 
-1. Implement JWT validation middleware
-   - Verify tokens against Auth service
-   - Extract and validate claims
-   - Create dependency for protected routes
-2. Create role-based access control
-   - Implement permission-based authorization
+1. Implement enhanced BetterAuth validation middleware
+   - Install BetterAuth client: `pip install better-auth-python`
+   - Configure client connection to Auth service in `app/auth/client.py`:
+     ```python
+     from better_auth import BetterAuthClient
+     
+     auth_client = BetterAuthClient(
+         base_url=os.getenv("AUTH_SERVICE_URL", "http://auth:4000"),
+         cache_redis_url=os.getenv("REDIS_URL")
+     )
+     ```
+   - Create token validation middleware in `app/middleware/auth.py`:
+     ```python
+     from fastapi import Request, HTTPException, Depends
+     from app.auth.client import auth_client
+     
+     async def verify_token(request: Request):
+         token = request.cookies.get("access_token") or request.headers.get("Authorization", "").replace("Bearer ", "")
+         if not token:
+             raise HTTPException(status_code=401, detail="Not authenticated")
+         
+         session = await auth_client.validate_token(token)
+         if not session:
+             raise HTTPException(status_code=401, detail="Invalid or expired token")
+         
+         request.state.user = session.user
+         return session
+     ```
+   - Create FastAPI dependencies for protected routes in `app/auth/dependencies.py`:
+     ```python
+     from fastapi import Depends, HTTPException
+     from app.middleware.auth import verify_token
+     
+     def require_auth(session = Depends(verify_token)):
+         return session
+     
+     def require_admin(session = Depends(verify_token)):
+         if "admin" not in session.user.roles:
+             raise HTTPException(status_code=403, detail="Admin access required")
+         return session
+     ```
+   - Implement route protection in API endpoints:
+     ```python
+     @router.get("/protected", dependencies=[Depends(require_auth)])
+     async def protected_route():
+         return {"message": "This is a protected route"}
+     ```
+   - Add caching for token validation with Redis
+   - Implement comprehensive session management functions
+
+2. Create comprehensive role-based access control
+   - Implement permission-based authorization with fine-grained controls
    - Add user roles and permissions to database models
-3. Implement proper error responses for auth failures
+   - Support hierarchical permissions with inheritance
+   - Create admin endpoints for role management
+   - Implement resource-level access control
+   - Add audit logging for sensitive operations
+
+3. Enhance security measures
+   - Add request rate limiting integrated with Auth service
+   - Implement proper error responses for auth failures
    - Create standardized error response format
    - Handle different authentication failure scenarios
+   - Add security headers to all API responses
+   - Implement IP-based blocking for suspicious activities
+   - Create secure logging of authentication events
+
+4. Support additional authentication features
+   - Add MFA validation support if required by resource sensitivity
+   - Implement session validation for critical operations
+   - Create endpoints to integrate with session management
+   - Support step-up authentication for sensitive operations
+   - Interface with Auth service for user management
 
 ## Business Logic
 

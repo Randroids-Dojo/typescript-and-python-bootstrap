@@ -21,27 +21,71 @@
 
 ## Core Functionality
 
-1. Implement authentication flow
-   - Create auth context provider
-   - Implement login page with shadcn/ui form components
-   - Implement registration page with shadcn/ui form components
-   - Add protected route wrapper
-   - Handle JWT storage and refresh
+1. Implement enhanced authentication flow with BetterAuth
+   - Install BetterAuth client: `npm install better-auth`
+   - Create auth client using `createAuthClient` in `lib/auth.ts`:
+     ```typescript
+     import { createAuthClient } from "better-auth/client"
+     
+     export const authClient = createAuthClient({
+       baseURL: process.env.NEXT_PUBLIC_AUTH_URL || "http://localhost:4000"
+     })
+     ```
+   - Create auth context provider wrapping BetterAuth client:
+     ```typescript
+     import { AuthProvider, useAuth } from "./AuthContext"
+     ```
+   - Implement login page with shadcn/ui form components:
+     ```typescript
+     const { data, error } = await authClient.signIn.email({
+       email,
+       password,
+       callbackURL: "/dashboard"
+     })
+     ```
+   - Implement registration page with strong password validation:
+     ```typescript
+     const { data, error } = await authClient.signUp.email({
+       email,
+       password,
+       name,
+       callbackURL: "/dashboard"
+     })
+     ```
+   - Add protected route wrapper using BetterAuth session hooks:
+     ```typescript
+     const { session, status } = authClient.useSession()
+     ```
+   - Add logout functionality with proper token invalidation:
+     ```typescript
+     await authClient.signOut({ /* options */ })
+     ```
+   - Implement session management UI (view/revoke active sessions)
+   - Add social login buttons if configured in Auth service
 
 2. Implement user dashboard
    - Create dashboard layout using shadcn/ui Card components
    - Implement profile section with shadcn/ui Avatar and forms
    - Add settings page with shadcn/ui Switch, Select, and RadioGroup components
+   - Create security settings section (password change, MFA setup)
+   - Add session management UI (list active devices/sessions)
 
-3. Create API service layer
-   - Implement authentication service
-   - Create data fetching services
-   - Add interceptors for JWT handling
+3. Create secure API service layer for BetterAuth integration
+   - Install BetterAuth client: `npm install better-auth`
+   - Create auth client instance using `createAuthClient`
+   - Set up interceptors for automatic token handling
+   - Configure CSRF protection for sensitive operations
+   - Implement automatic token refresh and retry logic
+   - Add session management and token validation
+   - Create comprehensive error handling for auth failures
+   - Set up secure token storage using HttpOnly cookies
 
-4. Implement error handling
+4. Implement security-focused error handling
    - Create toast notification system using shadcn/ui Toast component
-   - Add error boundaries
+   - Add error boundaries with proper security context
    - Implement loading states with shadcn/ui Skeleton components
+   - Add security-related notifications (login from new device, etc.)
+   - Create secure error logging (without sensitive information)
 
 ## UI Development
 

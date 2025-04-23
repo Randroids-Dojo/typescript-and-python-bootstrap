@@ -1,4 +1,37 @@
-# Auth Service ToDo List
+# Auth Service ToDo List (BetterAuth Implementation)
+
+## Understanding BetterAuth
+
+BetterAuth is an authentication framework that provides secure user authentication for web applications. Implementation steps:
+
+1. Initial Installation
+   - Install via npm: `npm install better-auth`
+   - Create authentication instance in `auth.ts` file
+   - Configure environment variables in `.env`:
+     - `BETTER_AUTH_SECRET`: Random encryption key
+     - `BETTER_AUTH_URL`: Base application URL
+
+2. Database Configuration
+   - Configure PostgreSQL database connection
+   - Set up schema using CLI tools:
+     - `npx @better-auth/cli generate`
+     - `npx @better-auth/cli migrate`
+
+3. Authentication Methods
+   - Configure email/password authentication
+   - Set up JWT token handling
+   - Implement required endpoints:
+     - `/api/auth/register`, `/api/auth/login`, `/api/auth/refresh`
+     - `/api/auth/validate`, `/api/auth/me`, `/api/auth/logout`
+
+4. Server Integration
+   - Create Express.js API route handler for `/api/auth/*`
+   - Set up authentication middleware
+   - Implement security best practices from jwt-research
+
+5. Client Integration Support
+   - Provide documentation for frontend integration
+   - Expose consistent API for frontend and backend services
 
 ## Initial Setup
 
@@ -6,85 +39,200 @@
 2. Initialize Node.js project
    - Run `npm init -y`
 3. Install dependencies
+   - BetterAuth core: `npm install better-auth`
+   - BetterAuth CLI: `npm install --save-dev @better-auth/cli`
    - Express.js: `npm install express`
-   - JWT: `npm install jsonwebtoken`
-   - Body parser: `npm install body-parser`
-   - Cors: `npm install cors`
-   - Bcrypt: `npm install bcrypt`
-   - Validation: `npm install joi`
+   - PostgreSQL client: `npm install pg pg-hstore`
    - Environment variables: `npm install dotenv`
-   - Development: `npm install --save-dev nodemon typescript ts-node @types/node @types/express`
-4. Create .env.example with necessary environment variables
+   - CORS: `npm install cors`
+   - Redis (for rate limiting and token storage): `npm install ioredis`
+   - Rate limiting: `npm install express-rate-limit rate-limit-redis`
+   - CSRF protection: `npm install csurf`
+   - Development: `npm install --save-dev nodemon typescript ts-node @types/node @types/express @types/pg`
+4. Create .env.example with necessary environment variables including:
+   - BETTER_AUTH_SECRET (strong random encryption key)
+   - BETTER_AUTH_URL (base application URL, e.g., http://localhost:4000)
+   - POSTGRES_HOST (database host)
+   - POSTGRES_PORT (database port)
+   - POSTGRES_USER (database user)
+   - POSTGRES_PASSWORD (database password)
+   - POSTGRES_DB (database name)
+   - REDIS_URL (Redis connection URL)
+   - ACCESS_TOKEN_EXPIRATION (15 minutes recommended)
+   - REFRESH_TOKEN_EXPIRATION (7 days recommended)
+   - CORS_ORIGINS (comma-separated list of allowed origins)
 5. Configure TypeScript (tsconfig.json)
 6. Set up linting configuration (ESLint)
 
 ## Project Structure
 
-1. Implement folder structure as outlined in claude.md
-2. Create basic Express application setup
-3. Configure middleware (CORS, body parsing, error handling)
+1. Implement folder structure for BetterAuth integration:
+   ```
+   Auth/
+   ├── Dockerfile
+   ├── src/
+   │   ├── index.ts            # Application entry point
+   │   ├── auth.ts             # BetterAuth instance configuration
+   │   ├── config/             # Environment and app configuration
+   │   ├── controllers/        # Route handlers
+   │   ├── middleware/         # Express middleware
+   │   ├── routes/             # API routes
+   │   ├── schemas/            # Database schemas
+   │   ├── services/           # Business logic
+   │   └── utils/              # Utility functions
+   ├── tests/                  # Test files
+   ├── .env.example            # Example environment variables
+   └── package.json            # Dependencies and scripts
+   ```
+2. Create basic Express application setup with BetterAuth integration
+3. Configure middleware (CORS, rate limiting, security headers)
+4. Implement PostgreSQL database connection for BetterAuth
+5. Set up Redis for rate limiting and token storage
 
 ## Authentication Endpoints
 
-1. Implement user registration endpoint (`/api/auth/register`)
-   - Input validation
-   - Password hashing
-   - User creation
-   - Response handling
+1. Configure BetterAuth instance in `auth.ts` file
+   ```typescript
+   import { betterAuth } from "better-auth"
+   
+   export const auth = betterAuth({
+     emailAndPassword: {    
+       enabled: true,
+       // Configure password requirements
+       passwordRequirements: {
+         minLength: 8,
+         requireSpecialChars: true,
+         requireNumbers: true
+       }
+     },
+     socialProviders: {
+       // Optional: Add social login providers
+       github: { 
+         clientId: process.env.GITHUB_CLIENT_ID!, 
+         clientSecret: process.env.GITHUB_CLIENT_SECRET!
+       }
+     },
+     session: {
+       // Configure session handling
+       strategy: "jwt",
+       accessTokenExpiresIn: process.env.ACCESS_TOKEN_EXPIRATION || "15m",
+       refreshTokenExpiresIn: process.env.REFRESH_TOKEN_EXPIRATION || "7d",
+       cookieOptions: {
+         httpOnly: true,
+         secure: process.env.NODE_ENV === "production",
+         sameSite: "strict"
+       }
+     }
+   })
+   ```
 
-2. Implement user login endpoint (`/api/auth/login`)
-   - Credentials validation
-   - JWT token generation (access and refresh)
-   - Response with tokens
+2. Implement Express API router in `routes/auth.ts`
+   ```typescript
+   import express from "express"
+   import { auth } from "../auth"
+   
+   const router = express.Router()
+   
+   // Handle all BetterAuth API routes
+   router.use("/api/auth/*", auth.api.expressMiddleware())
+   
+   export default router
+   ```
 
-3. Implement token refresh endpoint (`/api/auth/refresh`)
-   - Validate refresh token
-   - Generate new access token
-   - Handle token rotation
+3. Create required authentication endpoints
+   - Email sign up: `/api/auth/register` (handled by BetterAuth)
+   - Email sign in: `/api/auth/login` (handled by BetterAuth)
+   - Social sign in: `/api/auth/oauth/:provider` (if configured)
+   - Sign out: `/api/auth/logout` (handled by BetterAuth)
+   - Session validation: `/api/auth/validate` (handled by BetterAuth)
+   - User profile: `/api/auth/me` (handled by BetterAuth)
+   - Token refresh: `/api/auth/refresh` (handled by BetterAuth)
 
-4. Implement token validation endpoint (`/api/auth/validate`)
-   - Verify token signature and expiration
-   - Return token claims if valid
+4. Add custom authentication hooks and middleware
+   - Implement role-based access control middleware
+   - Create custom user profile extensions
+   - Add additional security headers
+   - Implement rate limiting for authentication endpoints
 
-5. Implement user profile endpoint (`/api/auth/me`)
-   - Extract user info from token
-   - Return user profile data
+5. Create user and session management utilities
+   - Add admin functions for user management
+   - Implement session listing and revocation
+   - Create account recovery flows
+   - Add email verification if needed
+   - Implement password reset functionality
 
-## Security Implementation
+6. Configure social authentication (optional)
+   - Set up GitHub OAuth integration
+   - Add Google login support
+   - Configure callback handlers
+   - Implement account linking
+
+## Enhanced Security Implementation
 
 1. Implement secure password hashing with bcrypt
    - Use proper salt rounds (minimum 12)
-   - Implement password validation rules
-2. Create JWT utilities
-   - Token generation with appropriate expiry times
-   - Access token (short-lived) and refresh token (longer-lived)
-   - Token verification with proper error handling
-   - Claims extraction and validation
-   - Support for token revocation
-3. Implement rate limiting
-   - Add rate limiting middleware for sensitive endpoints
-   - Configure different limits based on endpoint sensitivity
-4. Add input sanitization
-   - Validate and sanitize all user inputs
-   - Implement protection against common attacks (XSS, injection)
-5. Add CORS configuration
-   - Configure proper CORS headers
-   - Restrict to known origins in production
+   - Implement strong password validation rules
+   - Add password history to prevent reuse
+
+2. Create advanced JWT utilities
+   - Use asymmetric keys (RS256) for token signing
+   - Implement standard claims (iss, sub, exp, iat, jti)
+   - Access token (15 min) and refresh token (7 days)
+   - Include token family tracking for refresh tokens
+   - Implement token rotation and revocation strategies
+   - Use Redis for token blocklist with TTL
+   
+3. Implement comprehensive rate limiting
+   - Use Redis-backed token bucket algorithm
+   - Apply tiered rate limits based on endpoint sensitivity
+   - Implement exponential backoff for failed attempts
+   - Add tracking by IP, user ID, and device fingerprint
+
+4. Add advanced CSRF protection
+   - Implement SameSite=Strict cookies
+   - Add double-submit cookie pattern for sensitive operations
+   - Validate Origin/Referer headers
+
+5. Strengthen XSS protection
+   - Configure strict Content-Security-Policy headers
+   - Add X-XSS-Protection and other security headers
+   - Sanitize all user inputs
+   - Use HttpOnly, Secure, SameSite cookies
+
+6. Implement token theft detection
+   - Track token families and detect reuse
+   - Revoke all tokens on suspicious activity
+   - Add option to track sessions with device information
+   - Allow users to view and revoke active sessions
+
+7. Add Multi-Factor Authentication (optional)
+   - Implement TOTP-based authentication (Google Authenticator)
+   - Generate and validate QR codes for MFA setup
+   - Create recovery codes for account recovery
+   - Add step-up authentication for sensitive operations
+
+8. Consider passwordless authentication options (optional)
+   - Implement email magic links with secure tokens
+   - Add WebAuthn/FIDO2 support for biometric authentication
 
 ## Testing
 
 1. Set up testing framework (Jest)
-2. Write unit tests for authentication logic
-3. Implement integration tests for API endpoints
+2. Write comprehensive unit tests for security utilities
+3. Implement integration tests for authentication flows
+4. Add security testing for token management
+5. Test rate limiting and brute force protection
 
 ## Docker Integration
 
 1. Ensure Dockerfile correctly builds the application
-2. Test the application running in Docker container
-3. Verify the service is accessible from other containers in Docker Compose network
+2. Configure proper Redis integration in Docker Compose
+3. Test the application running in Docker container
+4. Verify the service is accessible from other containers in Docker Compose network
 
 ## Documentation
 
-1. Document all authentication endpoints
-2. Create detailed setup instructions
+1. Document all authentication endpoints with security considerations
+2. Create detailed setup instructions including security parameters
 3. Document integration points with frontend and backend
+4. Add security guidelines for frontend token handling
