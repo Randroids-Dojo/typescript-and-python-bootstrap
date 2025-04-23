@@ -1,4 +1,4 @@
-import auth from '../auth';
+// We don't use auth import directly because we're creating a custom client
 
 // Create a client for frontend use
 // BetterAuth doesn't have createClient method in its type definition
@@ -20,7 +20,7 @@ export const authClient = {
     });
     return response.json();
   },
-  register: async (userData: any) => {
+  register: async (userData: { email: string; password: string }) => {
     const response = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

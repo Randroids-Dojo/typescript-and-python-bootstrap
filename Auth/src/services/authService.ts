@@ -54,7 +54,8 @@ class AuthService {
       const refreshToken = await generateRefreshToken(newUser);
       
       // Return success with user info and tokens
-      const { password, ...userWithoutPassword } = newUser;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
+      const { password: _, ...userWithoutPassword } = newUser;
       
       return {
         success: true,
@@ -101,6 +102,7 @@ class AuthService {
       const refreshToken = await generateRefreshToken(user);
       
       // Return success with user info and tokens
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
       const { password: _, ...userWithoutPassword } = user;
       
       return {
@@ -198,7 +200,8 @@ class AuthService {
       }
       
       // Return user data without password
-      const { password, ...userWithoutPassword } = user;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
+      const { password: _, ...userWithoutPassword } = user;
       
       return {
         success: true,

@@ -6,11 +6,8 @@ import UserModel from '../models/user';
 // Extend Express Request type to include user property
 // Using declaration merging instead of namespace
 
-declare global {
-  interface Express {
-    // Empty interface for extension purposes
-  }
-}
+// We don't need the global Express interface declaration since we're
+// already extending the Request interface in the 'express' module below
 
 declare module 'express' {
   interface Request {
@@ -25,9 +22,20 @@ declare module 'express' {
 export const authenticateJwt = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     // Use BetterAuth's built-in authentication
-    // Note: cookies property isn't supported in BetterAuth types
+    // For BetterAuth, we need to convert Express headers to Web API Headers
+    const headers = new Headers();
+    Object.entries(req.headers).forEach(([key, value]) => {
+      if (value) {
+        if (Array.isArray(value)) {
+          value.forEach(v => headers.append(key, v));
+        } else {
+          headers.append(key, value);
+        }
+      }
+    });
+    
     const session = await auth.api.getSession({
-      headers: req.headers as any
+      headers
       // cookies property removed as it's not in the type definition
     });
     
@@ -94,8 +102,12 @@ export const authenticateJwtLegacy = async (req: Request, res: Response, next: N
 };
 
 // Role-based authorization middleware
-export const authorize = (roles: string[] = []): (req: Request, res: Response, next: NextFunction) => void => {
-  return (req: Request, res: Response, next: NextFunction): void => {
+/* eslint-disable no-unused-vars */
+export const authorize = (roles: string[] = []): ((req: Request, res: Response, next: NextFunction) => void) => {
+/* eslint-enable no-unused-vars */
+  
+  // Define middleware function
+  const authMiddleware = (req: Request, res: Response, next: NextFunction): void => {
     if (!req.user) {
       res.status(401).json({ message: 'Authentication required' });
       return;
@@ -108,4 +120,6 @@ export const authorize = (roles: string[] = []): (req: Request, res: Response, n
     
     next();
   };
+  
+  return authMiddleware;
 };

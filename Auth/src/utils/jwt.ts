@@ -62,7 +62,10 @@ export const verifyAccessToken = (token: string): TokenPayload | null => {
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as TokenPayload;
     return decoded;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
+    // We're intentionally ignoring the error and just returning null
+    // when the token is invalid
     return null;
   }
 };
@@ -101,6 +104,9 @@ export const verifyRefreshToken = async (token: string): Promise<{userId: string
       tokenFamily: parsedData.tokenFamily
     };
   } catch (error) {
+    // Any errors in token verification result in a null return
+    // This could be a Redis error or JSON parsing error
+    console.error('Refresh token verification error:', error);
     return null;
   }
 };
@@ -119,6 +125,8 @@ export const revokeToken = async (token: string): Promise<boolean> => {
     const result = await redisClient.del(`refresh_token:${refreshTokenHash}`);
     return result === 1;
   } catch (error) {
+    // Any Redis errors result in a false return
+    console.error('Token revocation error:', error);
     return false;
   }
 };

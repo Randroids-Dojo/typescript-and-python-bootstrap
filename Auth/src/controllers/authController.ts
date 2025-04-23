@@ -101,7 +101,8 @@ class AuthController {
         return;
       }
       
-      const result = await authService.logout(refreshToken, req.user.id);
+      // Call the service but don't need to store the result
+      await authService.logout(refreshToken, req.user.id);
       
       // Clear token cookies
       res.clearCookie('access_token');

@@ -1,5 +1,5 @@
 import { betterAuth } from "better-auth";
-import { BETTER_AUTH_SECRET, BETTER_AUTH_URL, JWT_ACCESS_EXPIRATION, JWT_REFRESH_EXPIRATION, NODE_ENV } from "./config";
+import { BETTER_AUTH_SECRET, BETTER_AUTH_URL } from "./config";
 
 export const auth = betterAuth({
   // Basic configuration

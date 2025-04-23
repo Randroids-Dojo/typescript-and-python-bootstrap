@@ -67,8 +67,8 @@ class UserModel {
         createdAt: result.rows[0].created_at,
         updatedAt: result.rows[0].updated_at
       };
-    } catch (error: any) {
-      if (error.code === '23505') { // Unique violation
+    } catch (error) {
+      if (error instanceof Error && 'code' in error && error.code === '23505') { // Unique violation
         console.error('User with this email already exists');
         return null;
       }
