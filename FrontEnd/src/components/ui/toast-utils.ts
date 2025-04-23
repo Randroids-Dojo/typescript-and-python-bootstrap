@@ -30,16 +30,16 @@ export const notify = {
       description,
       duration: 5000,
       classNames: {
-        toast: "group flex shadow-lg rounded-lg overflow-hidden bg-white dark:bg-card border border-border",
-        title: "text-foreground font-medium text-sm",
-        description: "text-muted-foreground text-xs",
+        toast: "group flex shadow-lg rounded-lg overflow-hidden bg-white dark:bg-card border border-destructive/30 dark:border-destructive/30",
+        title: "text-destructive font-medium text-sm",
+        description: "text-destructive/80 text-xs",
         actionButton: "bg-primary text-primary-foreground",
       },
       icon: React.createElement("svg", {
         xmlns: "http://www.w3.org/2000/svg",
         viewBox: "0 0 20 20",
         fill: "currentColor",
-        className: "w-5 h-5"
+        className: "w-5 h-5 text-destructive"
       }, React.createElement("path", {
         fillRule: "evenodd",
         d: "M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z",
@@ -78,6 +78,24 @@ export const notify = {
         description: "text-muted-foreground text-xs",
         actionButton: "bg-primary text-primary-foreground",
       },
+      icon: React.createElement("div", {
+        className: "animate-spin text-primary"
+      }, React.createElement("svg", {
+        xmlns: "http://www.w3.org/2000/svg",
+        width: "18",
+        height: "18",
+        viewBox: "0 0 24 24",
+        fill: "none",
+        stroke: "currentColor",
+        strokeWidth: "2",
+        strokeLinecap: "round",
+        strokeLinejoin: "round"
+      }, [
+        React.createElement("path", {
+          key: "circle",
+          d: "M21 12a9 9 0 1 1-6.219-8.56"
+        })
+      ])),
     });
   },
   promise: <T,>(

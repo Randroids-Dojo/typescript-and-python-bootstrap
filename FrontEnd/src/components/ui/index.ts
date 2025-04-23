@@ -33,10 +33,11 @@ export {
   DropdownMenuRadioGroup
 } from './dropdown-menu';
 
-export { Input } from './input';
+export { Input, PasswordInput } from './input';
 export { Label } from './label';
 export { Toaster } from './sonner';
 export { notify } from './toast-utils';
+export { PasswordStrengthMeter } from './password-strength';
 
 export {
   Form,
