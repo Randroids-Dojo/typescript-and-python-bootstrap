@@ -45,7 +45,7 @@ This will start all services in Docker containers:
 ## Check Style & Quality
 
 ```bash
-./scripts/test.sh
+./scripts/lint.sh
 ```
 
 ## Deploy
@@ -53,3 +53,11 @@ This will start all services in Docker containers:
 1. Open a PR with the latest changes
 2. Merge the PR after all CI checks pass
 3. Wait for the automatic CD actions to push images and other necessary changes to Azure
+
+
+## Demo
+
+Currently the UI is rough. It looks like:
+![Login](Login.png)
+![Register](Register.png)
+![Authenticated](Authenticated.png)
