@@ -53,12 +53,23 @@
 ## Security Implementation
 
 1. Implement secure password hashing with bcrypt
+   - Use proper salt rounds (minimum 12)
+   - Implement password validation rules
 2. Create JWT utilities
-   - Token generation
-   - Token verification
-   - Claims extraction
+   - Token generation with appropriate expiry times
+   - Access token (short-lived) and refresh token (longer-lived)
+   - Token verification with proper error handling
+   - Claims extraction and validation
+   - Support for token revocation
 3. Implement rate limiting
+   - Add rate limiting middleware for sensitive endpoints
+   - Configure different limits based on endpoint sensitivity
 4. Add input sanitization
+   - Validate and sanitize all user inputs
+   - Implement protection against common attacks (XSS, injection)
+5. Add CORS configuration
+   - Configure proper CORS headers
+   - Restrict to known origins in production
 
 ## Testing
 

@@ -15,6 +15,8 @@
    - passlib (for password hashing)
    - pydantic
    - pytest
+   - httpx (for testing and external API requests)
+   - python-multipart (for form data processing)
 4. Create .env.example with necessary environment variables
 5. Set up linting configuration (flake8, black, isort)
 
@@ -39,8 +41,13 @@
 1. Implement JWT validation middleware
    - Verify tokens against Auth service
    - Extract and validate claims
+   - Create dependency for protected routes
 2. Create role-based access control
+   - Implement permission-based authorization
+   - Add user roles and permissions to database models
 3. Implement proper error responses for auth failures
+   - Create standardized error response format
+   - Handle different authentication failure scenarios
 
 ## Business Logic
 

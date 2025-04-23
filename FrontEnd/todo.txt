@@ -8,6 +8,8 @@
 3. Set up shadcn
    - Install and initialize shadcn/ui: `npx shadcn-ui@latest init`
    - Configure tailwind.config.js and globals.css
+   - Choose style (default), base color (slate), and CSS variables (true)
+   - Enable TypeScript (tsx: true)
 4. Create .env.example with necessary environment variables
 5. Add linting configuration (ESLint, Prettier)
 
@@ -21,15 +23,15 @@
 
 1. Implement authentication flow
    - Create auth context provider
-   - Implement login page
-   - Implement registration page
+   - Implement login page with shadcn/ui form components
+   - Implement registration page with shadcn/ui form components
    - Add protected route wrapper
    - Handle JWT storage and refresh
 
 2. Implement user dashboard
-   - Create dashboard layout
-   - Implement profile section
-   - Add settings page
+   - Create dashboard layout using shadcn/ui Card components
+   - Implement profile section with shadcn/ui Avatar and forms
+   - Add settings page with shadcn/ui Switch, Select, and RadioGroup components
 
 3. Create API service layer
    - Implement authentication service
@@ -37,16 +39,22 @@
    - Add interceptors for JWT handling
 
 4. Implement error handling
-   - Create toast notification system
+   - Create toast notification system using shadcn/ui Toast component
    - Add error boundaries
-   - Implement loading states
+   - Implement loading states with shadcn/ui Skeleton components
 
 ## UI Development
 
 1. Implement responsive layout design
-2. Create form components with validation
-3. Implement dark/light theme toggle
-4. Add loading skeletons for async operations
+2. Create form components with validation using shadcn/ui Form components
+   - Utilize shadcn/ui Input, Select, Checkbox, RadioGroup, and Textarea components
+   - Add form validation with proper error messaging
+3. Implement dark/light theme toggle using shadcn/ui Switch component
+4. Add loading skeletons for async operations using shadcn/ui Skeleton component
+5. Implement data tables using shadcn/ui Table components
+6. Add dialog modals using shadcn/ui Dialog component
+7. Create navigation using shadcn/ui NavigationMenu component
+8. Implement dropdown menus with shadcn/ui DropdownMenu component
 
 ## Testing
 
