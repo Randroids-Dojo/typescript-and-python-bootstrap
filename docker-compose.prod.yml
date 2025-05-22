@@ -1,0 +1,46 @@
+services:
+  auth-service:
+    image: ${REGISTRY}/auth-service:${TAG:-latest}
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+      target: production
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
+      BETTER_AUTH_URL: ${APP_URL}
+      REDIS_URL: ${REDIS_URL}
+      PORT: 3001
+
+  backend:
+    image: ${REGISTRY}/backend:${TAG:-latest}
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      AUTH_SERVICE_URL: http://auth-service:3001
+
+  frontend:
+    image: ${REGISTRY}/frontend:${TAG:-latest}
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: production
+      args:
+        VITE_API_URL: ${APP_URL}/api
+        VITE_AUTH_URL: ${APP_URL}/auth
+
+  nginx:
+    image: ${REGISTRY}/nginx:${TAG:-latest}
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - frontend
+      - backend
+      - auth-service
