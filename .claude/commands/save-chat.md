@@ -4,5 +4,5 @@ Follow these steps:
 
 1. Get the current system timestamp
 2. Create a new text file named: ./ChatHistory/<system-timestamp>.txt
-3. Save history in the new file using: history -a && cat "$(echo $HISTFILE)" | tail -n 50 > ./ChatHistory/<system-timestamp>.txt
+3. Copy all of our messages from this chat session to the new text file
 4. Remind me to end the chat and start a new one

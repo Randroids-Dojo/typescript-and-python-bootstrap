@@ -1,1 +1,0 @@
-Assistant: [Request interrupted by user] < /dev/null
