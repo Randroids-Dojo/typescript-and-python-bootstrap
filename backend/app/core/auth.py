@@ -1,38 +1,65 @@
 from fastapi import HTTPException, Security, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, text
+from datetime import datetime
 import httpx
 from typing import Optional
 from app.core.config import settings
+from app.database import get_db
 
 security = HTTPBearer()
 
 
-async def verify_token(credentials: HTTPAuthorizationCredentials = Security(security)) -> dict:
-    """Verify the token with the auth service"""
+async def verify_token(
+    credentials: HTTPAuthorizationCredentials = Security(security),
+    db: AsyncSession = Depends(get_db)
+) -> dict:
+    """Verify the token directly from the database"""
     token = credentials.credentials
     
-    async with httpx.AsyncClient() as client:
-        try:
-            response = await client.get(
-                f"{settings.AUTH_SERVICE_URL}/auth/verify-token",
-                headers={"Authorization": f"Bearer {token}"},
-                timeout=5.0
-            )
-            
-            if response.status_code == 200:
-                data = response.json()
-                if data.get("valid"):
-                    return data.get("session", {})
-                    
-            raise HTTPException(
-                status_code=401,
-                detail="Invalid authentication credentials"
-            )
-        except httpx.RequestError as e:
-            raise HTTPException(
-                status_code=503,
-                detail="Auth service unavailable"
-            )
+    try:
+        # Query the session and user data directly
+        query = text("""
+            SELECT s.id as session_id, s."userId", s."expiresAt",
+                   u.id as user_id, u.email, u.name, u."emailVerified"
+            FROM session s
+            JOIN "user" u ON s."userId" = u.id
+            WHERE s.token = :token AND s."expiresAt" > :now
+        """)
+        
+        result = await db.execute(
+            query, 
+            {"token": token, "now": datetime.utcnow()}
+        )
+        row = result.first()
+        
+        if row:
+            return {
+                "session": {
+                    "id": row.session_id,
+                    "userId": row.userId,
+                    "expiresAt": row.expiresAt.isoformat()
+                },
+                "user": {
+                    "id": row.user_id,
+                    "email": row.email,
+                    "name": row.name,
+                    "emailVerified": row.emailVerified
+                }
+            }
+        
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid authentication credentials"
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=503,
+            detail="Authentication service error"
+        )
 
 
 async def get_current_user(session: dict = Depends(verify_token)) -> dict:

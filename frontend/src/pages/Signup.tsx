@@ -50,13 +50,55 @@ export default function Signup() {
     setIsLoading(true)
 
     try {
-      await signUp.email({
+      const result = await signUp.email({
         email: values.email,
         password: values.password,
       })
-      navigate("/dashboard")
-    } catch (err) {
-      setError("Failed to create account. Email may already be in use.")
+      
+      // Check if the result contains an error
+      if (result?.error || result?.code || result?.status === "422") {
+        // Treat it as an error
+        const err = result
+        const errorCode = err.code || err.error?.code
+        const errorMessage = err.message || err.error?.message
+        
+        if (errorCode === 'USER_ALREADY_EXISTS' || errorMessage?.includes('already exists')) {
+          setError("An account with this email already exists. Please sign in instead.")
+        } else if (errorCode === 'WEAK_PASSWORD') {
+          setError("Password is too weak. Please use a stronger password.")
+        } else if (errorCode === 'INVALID_EMAIL') {
+          setError("Please enter a valid email address.")
+        } else {
+          setError(errorMessage || "Failed to create account. Please try again.")
+        }
+        return // Don't navigate
+      }
+      
+      // Only navigate if signup was truly successful
+      if (result && result.user) {
+        navigate("/dashboard")
+      }
+    } catch (err: any) {
+      console.error("Signup error full details:", err)
+      console.error("Error response:", err.response)
+      console.error("Error data:", err.response?.data)
+      
+      // Check different error formats
+      const errorCode = err.code || err.response?.data?.code || err.error?.code
+      const errorMessage = err.message || err.response?.data?.message || err.error?.message
+      
+      alert("ERROR CODE: " + errorCode + ", MESSAGE: " + errorMessage)
+      
+      // Better error handling for different error types
+      if (errorCode === 'USER_ALREADY_EXISTS' || errorMessage?.includes('already exists')) {
+        setError("An account with this email already exists. Please sign in instead.")
+      } else if (errorCode === 'WEAK_PASSWORD') {
+        setError("Password is too weak. Please use a stronger password.")
+      } else if (errorCode === 'INVALID_EMAIL') {
+        setError("Please enter a valid email address.")
+      } else {
+        setError(errorMessage || "Failed to create account. Please try again.")
+      }
     } finally {
       setIsLoading(false)
     }
@@ -118,7 +160,9 @@ export default function Signup() {
                 )}
               />
               {error && (
-                <div className="text-sm text-destructive">{error}</div>
+                <div className="bg-destructive/10 border border-destructive/20 text-destructive px-3 py-2 rounded-md text-sm">
+                  {error}
+                </div>
               )}
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Creating account..." : "Sign Up"}

@@ -45,13 +45,37 @@ export default function Login() {
     setIsLoading(true)
 
     try {
-      await signIn.email({
+      const result = await signIn.email({
         email: values.email,
         password: values.password,
       })
+      
+      console.log("Login result:", result)
+      
+      // Check if the result contains an error
+      if (result?.error || result?.code || result?.status === "422" || result?.status === "401") {
+        // Treat it as an error
+        const err = result
+        const errorCode = err.code || err.error?.code
+        const errorMessage = err.message || err.error?.message
+        
+        if (errorCode === 'INVALID_CREDENTIALS' || errorCode === 'USER_NOT_FOUND' || errorMessage?.includes('Invalid')) {
+          setError("Invalid email or password. Please try again.")
+        } else if (errorCode === 'TOO_MANY_ATTEMPTS') {
+          setError("Too many login attempts. Please try again later.")
+        } else {
+          setError(errorMessage || "Failed to sign in. Please try again.")
+        }
+        return // Don't navigate
+      }
+      
+      // For login, Better Auth might not return the user object directly
+      // Just navigate if we got here without errors
       navigate("/dashboard")
-    } catch (err) {
-      setError("Invalid email or password")
+    } catch (err: any) {
+      // This might not be reached if Better Auth returns errors as responses
+      console.error("Login error:", err)
+      setError(err.message || "Failed to sign in. Please try again.")
     } finally {
       setIsLoading(false)
     }
@@ -100,7 +124,9 @@ export default function Login() {
                 )}
               />
               {error && (
-                <div className="text-sm text-destructive">{error}</div>
+                <div className="bg-destructive/10 border border-destructive/20 text-destructive px-3 py-2 rounded-md text-sm">
+                  {error}
+                </div>
               )}
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Logging in..." : "Login"}

@@ -33,7 +33,7 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgresql://app_user:app_password@postgres:5432/app_db}
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-development-secret-key}
-      BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:80}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://auth-service:3001}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173,http://localhost:80}
       PORT: 3001

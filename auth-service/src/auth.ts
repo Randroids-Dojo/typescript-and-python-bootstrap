@@ -10,6 +10,7 @@ const pool = new Pool({
 export const auth = betterAuth({
   database: pool,
   baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3001",
+  basePath: "/auth",
   secret: process.env.BETTER_AUTH_SECRET || "development-secret-key",
   
   emailAndPassword: {
@@ -35,6 +36,3 @@ export const auth = betterAuth({
     enabled: false
   }
 })
-
-// Export handler for Express
-export const authHandler = auth.handler

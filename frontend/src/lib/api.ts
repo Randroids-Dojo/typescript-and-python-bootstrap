@@ -8,13 +8,15 @@ export const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // Send cookies with requests
 })
 
-// Add auth token to requests
+// Add auth token to requests (for backends that use Bearer tokens)
 api.interceptors.request.use(async (config) => {
   const session = await authClient.getSession()
-  if (session?.token) {
-    config.headers.Authorization = `Bearer ${session.token}`
+  if (session?.session?.token) {
+    // Use the session token, not the user token
+    config.headers.Authorization = `Bearer ${session.session.token}`
   }
   return config
 })
