@@ -52,19 +52,27 @@ app.get("/api/validate-token", async (req, res) => {
   
   try {
     // Use Better Auth's API to validate the session
-    // The token might be URL encoded, so decode it
-    const decodedToken = decodeURIComponent(token)
+    // The token is the session cookie value - Better Auth uses 'better-auth.session_token'
     const session = await auth.api.getSession({
       headers: {
-        cookie: `better-auth.session_token=${decodedToken}`
+        cookie: `better-auth.session_token=${encodeURIComponent(token)}`
       }
     })
     
     if (session) {
       res.json({ 
         valid: true,
-        session: session.session,
-        user: session.user
+        session: {
+          id: session.session.id,
+          userId: session.session.userId,
+          expiresAt: session.session.expiresAt
+        },
+        user: {
+          id: session.user.id,
+          email: session.user.email,
+          name: session.user.name,
+          emailVerified: session.user.emailVerified
+        }
       })
     } else {
       res.status(401).json({ valid: false, error: "Invalid session" })
@@ -75,44 +83,6 @@ app.get("/api/validate-token", async (req, res) => {
   }
 })
 
-// Custom sign-in endpoint that returns the full session token for API usage
-app.post("/api/sign-in", async (req, res) => {
-  try {
-    // Forward the request to Better Auth
-    const response = await fetch(`http://localhost:${PORT}/auth/sign-in/email`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(req.body),
-    })
-    
-    if (!response.ok) {
-      return res.status(response.status).json(await response.json())
-    }
-    
-    const data = await response.json()
-    const setCookie = response.headers.get('set-cookie')
-    
-    // Extract the session token from the cookie
-    let sessionToken = null
-    if (setCookie) {
-      const match = setCookie.match(/better-auth\.session_token=([^;]+)/)
-      if (match) {
-        sessionToken = match[1]
-      }
-    }
-    
-    // Return the response with the full session token
-    res.json({
-      ...data,
-      sessionToken // This is the full cookie value that can be used as a Bearer token
-    })
-  } catch (error) {
-    console.error('Sign-in error:', error)
-    res.status(500).json({ error: 'Internal server error' })
-  }
-})
 
 // Start server
 app.listen(PORT, () => {

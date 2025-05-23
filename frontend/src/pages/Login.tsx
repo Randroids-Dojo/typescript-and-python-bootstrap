@@ -69,9 +69,10 @@ export default function Login() {
         return // Don't navigate
       }
       
-      // For login, Better Auth might not return the user object directly
-      // Just navigate if we got here without errors
-      navigate("/dashboard")
+      // Wait a moment for the session cookie to be set
+      setTimeout(() => {
+        navigate("/dashboard")
+      }, 100)
     } catch (err: any) {
       // This might not be reached if Better Auth returns errors as responses
       console.error("Login error:", err)

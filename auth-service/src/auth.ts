@@ -9,7 +9,7 @@ const pool = new Pool({
 
 export const auth = betterAuth({
   database: pool,
-  baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3001",
+  baseURL: process.env.BETTER_AUTH_URL || "http://localhost:80",
   basePath: "/auth",
   secret: process.env.BETTER_AUTH_SECRET || "development-secret-key",
   
@@ -21,7 +21,11 @@ export const auth = betterAuth({
   session: {
     expiresIn: 60 * 60 * 24 * 7, // 7 days
     updateAge: 60 * 60 * 24,      // 1 day
-    cookieName: "auth.session"
+    cookieName: "auth.session",
+    cookieCache: {
+      enabled: true,
+      maxAge: 5 * 60 // 5 minutes
+    }
   },
 
   // Additional configuration
@@ -29,6 +33,13 @@ export const auth = betterAuth({
     accountLinking: {
       enabled: true,
     }
+  },
+
+  // Advanced configuration for cookie handling
+  advanced: {
+    cookiePrefix: "",
+    useSecureCookies: false, // Set to true in production with HTTPS
+    crossSubdomainCookies: false
   },
 
   // CORS configuration will be handled by Express
