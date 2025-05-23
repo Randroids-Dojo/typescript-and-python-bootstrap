@@ -1,0 +1,134 @@
+# Dependabot configuration for automated dependency updates and security alerts
+# https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
+
+version: 2
+updates:
+  # Frontend - React/TypeScript
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "04:00"
+    open-pull-requests-limit: 5
+    assignees:
+      - "Randroids-Dojo"
+    labels:
+      - "dependencies"
+      - "frontend"
+    groups:
+      development-dependencies:
+        patterns:
+          - "@types/*"
+          - "eslint*"
+          - "vite*"
+          - "typescript*"
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Auth Service - Node.js/TypeScript
+  - package-ecosystem: "npm"
+    directory: "/auth-service"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "04:00"
+    open-pull-requests-limit: 5
+    assignees:
+      - "Randroids-Dojo"
+    labels:
+      - "dependencies"
+      - "auth-service"
+      - "security"
+    groups:
+      development-dependencies:
+        patterns:
+          - "@types/*"
+          - "typescript*"
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Backend - Python/FastAPI
+  - package-ecosystem: "pip"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "04:00"
+    open-pull-requests-limit: 5
+    assignees:
+      - "Randroids-Dojo"
+    labels:
+      - "dependencies"
+      - "backend"
+    groups:
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Docker base images
+  - package-ecosystem: "docker"
+    directory: "/auth-service"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "04:00"
+    assignees:
+      - "Randroids-Dojo"
+    labels:
+      - "docker"
+      - "infrastructure"
+
+  - package-ecosystem: "docker"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "04:00"
+    assignees:
+      - "Randroids-Dojo"
+    labels:
+      - "docker"
+      - "infrastructure"
+
+  - package-ecosystem: "docker"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "04:00"
+    assignees:
+      - "Randroids-Dojo"
+    labels:
+      - "docker"
+      - "infrastructure"
+
+  - package-ecosystem: "docker"
+    directory: "/nginx"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "04:00"
+    assignees:
+      - "Randroids-Dojo"
+    labels:
+      - "docker"
+      - "infrastructure"
+
+# GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "04:00"
+    assignees:
+      - "Randroids-Dojo"
+    labels:
+      - "github-actions"
+      - "ci/cd"
