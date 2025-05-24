@@ -1,0 +1,218 @@
+# docker-compose.prod.yml
+# Secure production configuration
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      # Enable SSL
+      POSTGRES_SSL_MODE: require
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Mount SSL certificates if needed
+      # - ./certs/postgres:/var/lib/postgresql/certs:ro
+    # No external ports exposed
+    networks:
+      - backend-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASSWORD}
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      --save 60 1000
+      --appendonly yes
+    volumes:
+      - redis_data:/data
+    # No external ports exposed
+    networks:
+      - backend-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--pass", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+
+  auth-service:
+    image: ${REGISTRY}/auth-service:${TAG}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL}
+      REDIS_URL: ${REDIS_URL}
+      CORS_ORIGIN: ${CORS_ORIGIN}
+      # Security settings
+      COOKIE_SECURE: "true"
+      COOKIE_SAMESITE: "lax"
+      ENABLE_RATE_LIMITING: "true"
+      ENABLE_EMAIL_VERIFICATION: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - backend-network
+      - frontend-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+    # Security: Run as non-root user
+    user: "1000:1000"
+
+  backend:
+    image: ${REGISTRY}/backend:${TAG}
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      AUTH_SERVICE_URL: http://auth-service:3001
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+    networks:
+      - backend-network
+      - frontend-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
+    # Security: Run as non-root user
+    user: "1000:1000"
+
+  frontend:
+    image: ${REGISTRY}/frontend:${TAG}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      VITE_API_URL: ${VITE_API_URL}
+      VITE_AUTH_URL: ${VITE_AUTH_URL}
+    networks:
+      - frontend-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 256M
+
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      # Only expose HTTPS in production
+      - "443:443"
+      # Redirect HTTP to HTTPS
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
+      - ./certs:/etc/nginx/certs:ro
+      # Security: Read-only root filesystem
+      - nginx_cache:/var/cache/nginx
+      - nginx_run:/var/run
+    networks:
+      - frontend-network
+    depends_on:
+      - frontend
+      - backend
+      - auth-service
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 128M
+    # Security configurations
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+
+# Networks
+networks:
+  frontend-network:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: br-frontend
+  backend-network:
+    driver: bridge
+    internal: true  # No external access
+    driver_opts:
+      com.docker.network.bridge.name: br-backend
+
+# Volumes
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  nginx_cache:
+    driver: local
+  nginx_run:
+    driver: local
+
+# Secrets management (if using Docker Swarm)
+secrets:
+  postgres_password:
+    external: true
+  redis_password:
+    external: true
+  better_auth_secret:
+    external: true

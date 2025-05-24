@@ -24,13 +24,15 @@ import {
 
 const formSchema = z.object({
   email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
 })
 
 export default function Login() {
   const navigate = useNavigate()
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [loginAttempts, setLoginAttempts] = useState(0)
+  const [isBlocked, setIsBlocked] = useState(false)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -41,6 +43,17 @@ export default function Login() {
   })
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    // Client-side rate limiting
+    if (loginAttempts >= 5) {
+      setIsBlocked(true)
+      setError("Too many login attempts. Please try again later.")
+      setTimeout(() => {
+        setIsBlocked(false)
+        setLoginAttempts(0)
+      }, 60000) // Reset after 1 minute
+      return
+    }
+
     setError(null)
     setIsLoading(true)
 
@@ -50,33 +63,47 @@ export default function Login() {
         password: values.password,
       })
       
-      console.log("Login result:", result)
-      
-      // Check if the result contains an error
-      if (result?.error || result?.code || result?.status === "422" || result?.status === "401") {
-        // Treat it as an error
-        const err = result
-        const errorCode = err.code || err.error?.code
-        const errorMessage = err.message || err.error?.message
-        
-        if (errorCode === 'INVALID_CREDENTIALS' || errorCode === 'USER_NOT_FOUND' || errorMessage?.includes('Invalid')) {
-          setError("Invalid email or password. Please try again.")
-        } else if (errorCode === 'TOO_MANY_ATTEMPTS') {
-          setError("Too many login attempts. Please try again later.")
-        } else {
-          setError(errorMessage || "Failed to sign in. Please try again.")
-        }
-        return // Don't navigate
+      // Remove console.log in production
+      if (process.env.NODE_ENV !== 'production') {
+        console.log("Login result:", result)
       }
       
-      // Wait a moment for the session cookie to be set
-      setTimeout(() => {
-        navigate("/dashboard")
-      }, 100)
+      // Check if the result contains an error
+      if (result?.error || result?.code) {
+        setLoginAttempts(prev => prev + 1)
+        
+        const errorCode = result.code || result.error?.code
+        
+        // Generic error message to prevent user enumeration
+        setError("Invalid email or password. Please try again.")
+        
+        // Log specific error for monitoring (not to user)
+        if (process.env.NODE_ENV !== 'production') {
+          console.error("Login error:", errorCode)
+        }
+        return
+      }
+      
+      // Only navigate if login was successful
+      if (result && result.user) {
+        // Clear sensitive form data
+        form.reset()
+        
+        // Small delay to ensure session cookie is set
+        setTimeout(() => {
+          navigate("/dashboard")
+        }, 100)
+      }
     } catch (err: any) {
-      // This might not be reached if Better Auth returns errors as responses
-      console.error("Login error:", err)
-      setError(err.message || "Failed to sign in. Please try again.")
+      setLoginAttempts(prev => prev + 1)
+      
+      // Generic error message
+      setError("Failed to sign in. Please try again.")
+      
+      // Log for monitoring
+      if (process.env.NODE_ENV !== 'production') {
+        console.error("Login error:", err)
+      }
     } finally {
       setIsLoading(false)
     }
@@ -104,6 +131,10 @@ export default function Login() {
                       <Input
                         type="email"
                         placeholder="john@example.com"
+                        autoComplete="email"
+                        autoCapitalize="off"
+                        autoCorrect="off"
+                        spellCheck="false"
                         {...field}
                       />
                     </FormControl>
@@ -118,18 +149,30 @@ export default function Login() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="password" {...field} />
+                      <Input 
+                        type="password" 
+                        autoComplete="current-password"
+                        {...field} 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               {error && (
-                <div className="bg-destructive/10 border border-destructive/20 text-destructive px-3 py-2 rounded-md text-sm">
+                <div 
+                  className="bg-destructive/10 border border-destructive/20 text-destructive px-3 py-2 rounded-md text-sm"
+                  role="alert"
+                  aria-live="polite"
+                >
                   {error}
                 </div>
               )}
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button 
+                type="submit" 
+                className="w-full" 
+                disabled={isLoading || isBlocked}
+              >
                 {isLoading ? "Logging in..." : "Login"}
               </Button>
             </form>
@@ -138,6 +181,11 @@ export default function Login() {
             Don't have an account?{" "}
             <Link to="/signup" className="text-primary hover:underline">
               Sign up
+            </Link>
+          </div>
+          <div className="mt-2 text-center text-xs text-muted-foreground">
+            <Link to="/forgot-password" className="hover:underline">
+              Forgot your password?
             </Link>
           </div>
         </CardContent>

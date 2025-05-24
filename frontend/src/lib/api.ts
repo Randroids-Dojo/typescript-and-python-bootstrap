@@ -11,13 +11,11 @@ export const api = axios.create({
   withCredentials: true, // Send cookies with requests
 })
 
-// Add auth token to requests (for backends that use Bearer tokens)
+// Add auth token to requests
 api.interceptors.request.use(async (config) => {
-  const session = await authClient.getSession()
-  if (session?.session?.token) {
-    // Use the session token, not the user token
-    config.headers.Authorization = `Bearer ${session.session.token}`
-  }
+  // Better Auth handles cookies automatically with withCredentials
+  // The auth.session cookie will be sent automatically
+  // No need to manually add Authorization header
   return config
 })
 

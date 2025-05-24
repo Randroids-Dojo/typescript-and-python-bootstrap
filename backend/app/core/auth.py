@@ -1,4 +1,4 @@
-from fastapi import HTTPException, Security, Depends
+from fastapi import HTTPException, Security, Depends, Request, Cookie
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, text
@@ -8,46 +8,55 @@ from typing import Optional
 from app.core.config import settings
 from app.database import get_db
 
-security = HTTPBearer()
+security = HTTPBearer(auto_error=False)
 
 
 async def verify_token(
-    credentials: HTTPAuthorizationCredentials = Security(security),
+    request: Request,
+    credentials: Optional[HTTPAuthorizationCredentials] = Security(security),
     db: AsyncSession = Depends(get_db)
 ) -> dict:
-    """Verify the token directly from the database"""
-    token = credentials.credentials
+    """Verify the token with the auth service - supports both Bearer token and cookies"""
+    token = None
+    
+    # First try to get token from Authorization header
+    if credentials and credentials.credentials:
+        token = credentials.credentials
+        print(f"Using Bearer token from Authorization header")
+    else:
+        # Try to get better-auth.session_token cookie (this is what Better Auth uses)
+        auth_session_cookie = request.cookies.get("better-auth.session_token")
+        if auth_session_cookie:
+            # URL decode the cookie value
+            import urllib.parse
+            token = urllib.parse.unquote(auth_session_cookie)
+            print(f"Using better-auth.session_token cookie: {token[:20]}...")
+        else:
+            print(f"No authentication found - looking for 'better-auth.session_token' in cookies: {list(request.cookies.keys())}")
+    
+    if not token:
+        raise HTTPException(
+            status_code=401,
+            detail="No authentication credentials provided"
+        )
     
     try:
-        # Query the session and user data directly
-        query = text("""
-            SELECT s.id as session_id, s."userId", s."expiresAt",
-                   u.id as user_id, u.email, u.name, u."emailVerified"
-            FROM session s
-            JOIN "user" u ON s."userId" = u.id
-            WHERE s.token = :token AND s."expiresAt" > :now
-        """)
-        
-        result = await db.execute(
-            query, 
-            {"token": token, "now": datetime.utcnow()}
-        )
-        row = result.first()
-        
-        if row:
-            return {
-                "session": {
-                    "id": row.session_id,
-                    "userId": row.userId,
-                    "expiresAt": row.expiresAt.isoformat()
-                },
-                "user": {
-                    "id": row.user_id,
-                    "email": row.email,
-                    "name": row.name,
-                    "emailVerified": row.emailVerified
-                }
-            }
+        # Call the auth service to validate the token
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{settings.AUTH_SERVICE_URL}/api/validate-token",
+                headers={"Authorization": f"Bearer {token}"}
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("valid"):
+                    return {
+                        "session": data.get("session"),
+                        "user": data.get("user")
+                    }
+            else:
+                print(f"Auth validation failed: {response.status_code} - {response.text}")
         
         raise HTTPException(
             status_code=401,
@@ -56,6 +65,7 @@ async def verify_token(
     except HTTPException:
         raise
     except Exception as e:
+        print(f"Auth service error: {e}")
         raise HTTPException(
             status_code=503,
             detail="Authentication service error"

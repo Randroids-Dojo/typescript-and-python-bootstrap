@@ -1,0 +1,120 @@
+events {
+    worker_connections 1024;
+}
+
+http {
+    # Security headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Referrer-Policy "no-referrer-when-downgrade" always;
+    add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
+    
+    # Hide nginx version
+    server_tokens off;
+    
+    # Rate limiting zones
+    limit_req_zone $binary_remote_addr zone=login:10m rate=5r/m;
+    limit_req_zone $binary_remote_addr zone=api:10m rate=100r/s;
+    limit_req_zone $binary_remote_addr zone=general:10m rate=10r/s;
+    
+    upstream frontend {
+        server frontend:5173;
+    }
+
+    upstream auth_service {
+        server auth-service:3001;
+    }
+
+    upstream backend {
+        server backend:8000;
+    }
+
+    server {
+        listen 80;
+        client_max_body_size 10M;
+        
+        # Gzip compression
+        gzip on;
+        gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
+        
+        # Security: Hide server header
+        proxy_hide_header X-Powered-By;
+
+        # Frontend routes (with WebSocket support for Vite HMR)
+        location / {
+            # Rate limiting for general requests
+            limit_req zone=general burst=20 nodelay;
+            
+            proxy_pass http://frontend;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+
+        # Auth service routes
+        location /auth {
+            # Stricter rate limiting for auth endpoints
+            location ~ ^/auth/sign-(in|up)/email$ {
+                limit_req zone=login burst=2 nodelay;
+                proxy_pass http://auth_service;
+                include /etc/nginx/proxy_params.conf;
+            }
+            
+            # General auth routes
+            proxy_pass http://auth_service;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            
+            # Important: Pass cookies for auth
+            proxy_pass_header Set-Cookie;
+            proxy_pass_header Cookie;
+            
+            # Security headers for auth responses
+            proxy_hide_header X-Powered-By;
+            add_header X-Frame-Options "DENY" always;
+        }
+
+        # API routes
+        location /api {
+            # Rate limiting for API
+            limit_req zone=api burst=50 nodelay;
+            
+            proxy_pass http://backend;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            
+            # Pass auth headers
+            proxy_pass_header Authorization;
+            proxy_pass_header Cookie;
+            
+            # API timeout settings
+            proxy_connect_timeout 30s;
+            proxy_send_timeout 30s;
+            proxy_read_timeout 30s;
+        }
+        
+        # Health check endpoint (no rate limiting)
+        location /health {
+            access_log off;
+            return 200 "healthy\n";
+            add_header Content-Type text/plain;
+        }
+    }
+}
+
+# Proxy params to include (save as /etc/nginx/proxy_params.conf)
+# proxy_set_header Host $host;
+# proxy_set_header X-Real-IP $remote_addr;
+# proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+# proxy_set_header X-Forwarded-Proto $scheme;
+# proxy_pass_header Set-Cookie;
+# proxy_pass_header Cookie;
