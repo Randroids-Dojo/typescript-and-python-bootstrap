@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import { betterAuth } from 'better-auth';
 import { testPool } from './setup';
+import './setup'; // Import setup for global test hooks
 
 // Create test app
 const app = express();

@@ -78,22 +78,15 @@ def test_user_data():
 @pytest.fixture
 async def authenticated_client(client: AsyncClient, test_user_data) -> AsyncClient:
     """Create an authenticated test client."""
-    # First create a user
-    response = await client.post("/auth/signup", json=test_user_data)
-    assert response.status_code == 200
+    # Note: In a real test scenario, this would require the auth service to be running
+    # For now, we'll create a mock authentication that sets a test user ID
+    # This fixture would need to be updated to work with the actual auth service
     
-    # Then login
-    login_data = {
-        "username": test_user_data["username"],
-        "password": test_user_data["password"]
-    }
-    response = await client.post("/auth/login", data=login_data)
-    assert response.status_code == 200
+    # Mock setting user ID for backend tests
+    # In integration tests, this would authenticate through the auth service
+    test_user_id = "test-user-id-123"
     
-    # Extract the access token
-    token = response.json()["access_token"]
-    
-    # Set authorization header
-    client.headers["Authorization"] = f"Bearer {token}"
+    # Mock authorization by setting a header that the backend can recognize
+    client.headers["X-Test-User-ID"] = test_user_id
     
     return client
