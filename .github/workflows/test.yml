@@ -1,0 +1,224 @@
+name: Run Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  frontend-tests:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+    
+    - name: Install frontend dependencies
+      working-directory: ./frontend
+      run: npm ci
+    
+    - name: Run frontend tests
+      working-directory: ./frontend
+      run: npm test -- --run
+    
+    - name: Run frontend build
+      working-directory: ./frontend
+      run: npm run build
+
+  backend-tests:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+    
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install backend dependencies
+      working-directory: ./backend
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Run backend tests
+      working-directory: ./backend
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+        JWT_SECRET: test-secret-key
+        JWT_ALGORITHM: HS256
+        JWT_EXPIRATION_MINUTES: 30
+      run: |
+        pytest -v --cov=app --cov-report=term-missing
+
+  auth-service-tests:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_auth_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        cache-dependency-path: auth-service/package-lock.json
+    
+    - name: Install auth service dependencies
+      working-directory: ./auth-service
+      run: npm ci
+    
+    - name: Run auth service tests
+      working-directory: ./auth-service
+      env:
+        TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_auth_db
+        BETTER_AUTH_SECRET: test-auth-secret
+      run: npm test
+    
+    - name: Run auth service build
+      working-directory: ./auth-service
+      run: npm run build
+
+  integration-tests:
+    runs-on: ubuntu-latest
+    needs: [frontend-tests, backend-tests, auth-service-tests]
+    
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: integration_test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Use Node.js 20.x
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20.x
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.11
+    
+    - name: Install all dependencies
+      run: |
+        cd frontend && npm ci && cd ..
+        cd auth-service && npm ci && cd ..
+        cd backend && pip install -r requirements.txt && cd ..
+    
+    - name: Start services
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/integration_test_db
+        JWT_SECRET: integration-test-secret
+        BETTER_AUTH_SECRET: integration-test-auth-secret
+      run: |
+        # Start auth service
+        cd auth-service && npm run dev &
+        AUTH_PID=$!
+        
+        # Start backend
+        cd backend && uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+        BACKEND_PID=$!
+        
+        # Wait for services to be ready
+        sleep 10
+        
+        # Run integration tests (when implemented)
+        # For now, just check if services are running
+        curl -f http://localhost:8787/auth/session || exit 1
+        curl -f http://localhost:8000/health || exit 1
+        
+        # Cleanup
+        kill $AUTH_PID $BACKEND_PID
+
+  lint-and-format:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Use Node.js 20.x
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20.x
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.11
+    
+    - name: Install linting tools
+      run: |
+        cd frontend && npm ci && cd ..
+        pip install ruff black isort
+    
+    - name: Run frontend linting
+      working-directory: ./frontend
+      run: npm run lint
+    
+    - name: Check Python formatting
+      run: |
+        black --check backend/
+        isort --check-only backend/
+        ruff check backend/
