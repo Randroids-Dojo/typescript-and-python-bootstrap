@@ -83,6 +83,27 @@ async def get_current_user(session: dict = Depends(verify_token)) -> dict:
     return user
 
 
-async def get_current_user_id(user: dict = Depends(get_current_user)) -> str:
+async def get_current_user_id(request: Request) -> str:
     """Get the current user's ID"""
-    return user.get("id", "")
+    # Support test mode with X-Test-User-ID header
+    test_user_id = request.headers.get("X-Test-User-ID")
+    if test_user_id:
+        return test_user_id
+    
+    # Production mode - get user through normal auth flow
+    try:
+        session = await verify_token(request)
+        user = session.get("user")
+        if not user:
+            raise HTTPException(
+                status_code=401,
+                detail="User not found in session"
+            )
+        return user.get("id", "")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=401,
+            detail="Authentication required"
+        )

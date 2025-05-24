@@ -5,7 +5,7 @@ export const testPool = new Pool({
   connectionString: process.env.TEST_DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/test_auth_db'
 });
 
-beforeAll(async () => {
+global.beforeAll(async () => {
   // Create test tables
   await testPool.query(`
     CREATE TABLE IF NOT EXISTS users (
@@ -42,7 +42,7 @@ beforeAll(async () => {
   `);
 });
 
-afterAll(async () => {
+global.afterAll(async () => {
   // Clean up
   await testPool.query('DROP TABLE IF EXISTS accounts CASCADE');
   await testPool.query('DROP TABLE IF EXISTS sessions CASCADE');
@@ -50,7 +50,7 @@ afterAll(async () => {
   await testPool.end();
 });
 
-beforeEach(async () => {
+global.beforeEach(async () => {
   // Clear data between tests
   await testPool.query('DELETE FROM accounts');
   await testPool.query('DELETE FROM sessions');
