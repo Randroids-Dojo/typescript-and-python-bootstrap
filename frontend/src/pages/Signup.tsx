@@ -74,10 +74,11 @@ export default function Signup() {
         return // Don't navigate
       }
       
-      // Only navigate if signup was truly successful
-      if (result && result.user) {
-        navigate("/dashboard")
-      }
+      // If we get here, signup was successful
+      // Redirect to login page after successful signup
+      navigate("/login", { 
+        state: { message: "Account created successfully! Please log in." } 
+      })
     } catch (err: any) {
       console.error("Signup error full details:", err)
       console.error("Error response:", err.response)

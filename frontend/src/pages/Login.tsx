@@ -1,5 +1,5 @@
-import { useState } from "react"
-import { useNavigate, Link } from "react-router-dom"
+import { useState, useEffect } from "react"
+import { useNavigate, Link, useLocation } from "react-router-dom"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -29,8 +29,19 @@ const formSchema = z.object({
 
 export default function Login() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
+
+  useEffect(() => {
+    // Check if we have a success message from signup redirect
+    if (location.state?.message) {
+      setSuccessMessage(location.state.message)
+      // Clear the state to prevent message from showing again on refresh
+      window.history.replaceState({}, document.title)
+    }
+  }, [location])
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -124,6 +135,11 @@ export default function Login() {
                   </FormItem>
                 )}
               />
+              {successMessage && (
+                <div className="bg-green-50 border border-green-200 text-green-700 px-3 py-2 rounded-md text-sm">
+                  {successMessage}
+                </div>
+              )}
               {error && (
                 <div className="bg-destructive/10 border border-destructive/20 text-destructive px-3 py-2 rounded-md text-sm">
                   {error}
