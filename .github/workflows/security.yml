@@ -81,6 +81,9 @@ jobs:
   # Docker Security Scan
   docker-security:
     runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
     strategy:
       matrix:
         service: [auth-service, backend, frontend, nginx]
