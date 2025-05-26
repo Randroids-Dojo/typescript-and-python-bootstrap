@@ -12,7 +12,7 @@ updates:
       time: "04:00"
     open-pull-requests-limit: 5
     assignees:
-      - "Randroids-Dojo"
+      - "randroid88"
     labels:
       - "dependencies"
       - "frontend"
@@ -37,7 +37,7 @@ updates:
       time: "04:00"
     open-pull-requests-limit: 5
     assignees:
-      - "Randroids-Dojo"
+      - "randroid88"
     labels:
       - "dependencies"
       - "auth-service"
@@ -61,7 +61,7 @@ updates:
       time: "04:00"
     open-pull-requests-limit: 5
     assignees:
-      - "Randroids-Dojo"
+      - "randroid88"
     labels:
       - "dependencies"
       - "backend"
@@ -79,7 +79,7 @@ updates:
       day: "monday"
       time: "04:00"
     assignees:
-      - "Randroids-Dojo"
+      - "randroid88"
     labels:
       - "docker"
       - "infrastructure"
@@ -91,7 +91,7 @@ updates:
       day: "monday"
       time: "04:00"
     assignees:
-      - "Randroids-Dojo"
+      - "randroid88"
     labels:
       - "docker"
       - "infrastructure"
@@ -103,7 +103,7 @@ updates:
       day: "monday"
       time: "04:00"
     assignees:
-      - "Randroids-Dojo"
+      - "randroid88"
     labels:
       - "docker"
       - "infrastructure"
@@ -115,7 +115,7 @@ updates:
       day: "monday"
       time: "04:00"
     assignees:
-      - "Randroids-Dojo"
+      - "randroid88"
     labels:
       - "docker"
       - "infrastructure"
@@ -128,7 +128,7 @@ updates:
       day: "monday"
       time: "04:00"
     assignees:
-      - "Randroids-Dojo"
+      - "randroid88"
     labels:
       - "github-actions"
       - "ci/cd"
