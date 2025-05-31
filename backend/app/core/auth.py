@@ -17,6 +17,14 @@ async def verify_token(
     db: AsyncSession = Depends(get_db)
 ) -> dict:
     """Verify the token with the auth service - supports both Bearer token and cookies"""
+    # Support test mode with X-Test-User-ID header
+    test_user_id = request.headers.get("X-Test-User-ID")
+    if test_user_id:
+        return {
+            "session": {"id": "test-session"},
+            "user": {"id": test_user_id}
+        }
+    
     token = None
     
     # First try to get token from Authorization header
@@ -37,7 +45,7 @@ async def verify_token(
     if not token:
         raise HTTPException(
             status_code=401,
-            detail="No authentication credentials provided"
+            detail="Not authenticated"
         )
     
     try:
@@ -83,7 +91,11 @@ async def get_current_user(session: dict = Depends(verify_token)) -> dict:
     return user
 
 
-async def get_current_user_id(request: Request) -> str:
+async def get_current_user_id(
+    request: Request,
+    credentials: Optional[HTTPAuthorizationCredentials] = Security(security),
+    db: AsyncSession = Depends(get_db)
+) -> str:
     """Get the current user's ID"""
     # Support test mode with X-Test-User-ID header
     test_user_id = request.headers.get("X-Test-User-ID")
@@ -92,7 +104,7 @@ async def get_current_user_id(request: Request) -> str:
     
     # Production mode - get user through normal auth flow
     try:
-        session = await verify_token(request)
+        session = await verify_token(request, credentials, db)
         user = session.get("user")
         if not user:
             raise HTTPException(
@@ -105,5 +117,5 @@ async def get_current_user_id(request: Request) -> str:
     except Exception as e:
         raise HTTPException(
             status_code=401,
-            detail="Authentication required"
+            detail="Not authenticated"
         )

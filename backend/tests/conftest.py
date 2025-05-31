@@ -1,4 +1,5 @@
 import pytest
+import pytest_asyncio
 import os
 from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
@@ -24,13 +25,13 @@ test_engine = create_async_engine(
     echo=False,
 )
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest_asyncio.fixture(scope="session")
 async def cleanup_engine():
     """Cleanup the test engine after all tests."""
     yield
     await test_engine.dispose()
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_db() -> AsyncGenerator[AsyncSession, None]:
     """Create test database tables and provide a database session."""
     async with test_engine.begin() as conn:
@@ -49,11 +50,11 @@ async def test_db() -> AsyncGenerator[AsyncSession, None]:
         yield session
         await session.rollback()
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def client(test_db: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
     """Create a test client with overridden dependencies."""
-    def override_get_db():
-        return test_db
+    async def override_get_db():
+        yield test_db
     
     app.dependency_overrides[get_db] = override_get_db
     
@@ -74,7 +75,7 @@ def test_user_data():
         "password": "testpassword123"
     }
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def authenticated_client(client: AsyncClient, test_user_data) -> AsyncGenerator[AsyncClient, None]:
     """Create an authenticated test client."""
     # Mock setting user ID for backend tests

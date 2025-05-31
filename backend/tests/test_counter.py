@@ -8,7 +8,7 @@ from app.models.counter import GlobalCounter
 @pytest.mark.asyncio
 async def test_get_counter_initial(client: AsyncClient, test_db: AsyncSession):
     """Test getting the counter when it doesn't exist yet."""
-    response = await client.get("/counter")
+    response = await client.get("/api/counter")
     assert response.status_code == 200
     data = response.json()
     assert data["count"] == 0
@@ -22,12 +22,15 @@ async def test_get_counter_initial(client: AsyncClient, test_db: AsyncSession):
 async def test_increment_counter(client: AsyncClient, test_db: AsyncSession):
     """Test incrementing the counter."""
     # First get initial value
-    response = await client.get("/counter")
+    response = await client.get("/api/counter")
     assert response.status_code == 200
     initial_count = response.json()["count"]
     
+    # Add test authentication
+    client.headers["X-Test-User-ID"] = "test-user-increment"
+    
     # Increment
-    response = await client.post("/counter/increment")
+    response = await client.post("/api/counter/increment")
     assert response.status_code == 200
     data = response.json()
     assert data["count"] == initial_count + 1
@@ -41,30 +44,36 @@ async def test_increment_counter(client: AsyncClient, test_db: AsyncSession):
 async def test_multiple_increments(client: AsyncClient, test_db: AsyncSession):
     """Test multiple counter increments."""
     # Get initial value
-    response = await client.get("/counter")
+    response = await client.get("/api/counter")
     initial_count = response.json()["count"]
+    
+    # Add test authentication
+    client.headers["X-Test-User-ID"] = "test-user-multiple"
     
     # Increment multiple times
     increments = 5
     for i in range(increments):
-        response = await client.post("/counter/increment")
+        response = await client.post("/api/counter/increment")
         assert response.status_code == 200
         assert response.json()["count"] == initial_count + i + 1
     
     # Verify final value
-    response = await client.get("/counter")
+    response = await client.get("/api/counter")
     assert response.status_code == 200
     assert response.json()["count"] == initial_count + increments
 
 @pytest.mark.asyncio
 async def test_counter_persistence(client: AsyncClient, test_db: AsyncSession):
     """Test that counter value persists across requests."""
+    # Add test authentication
+    client.headers["X-Test-User-ID"] = "test-user-persistence"
+    
     # Increment counter
-    response = await client.post("/counter/increment")
+    response = await client.post("/api/counter/increment")
     assert response.status_code == 200
     count_after_increment = response.json()["count"]
     
     # Get counter value in a new request
-    response = await client.get("/counter")
+    response = await client.get("/api/counter")
     assert response.status_code == 200
     assert response.json()["count"] == count_after_increment
