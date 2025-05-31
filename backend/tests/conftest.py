@@ -1,39 +1,31 @@
 import pytest
-import asyncio
 import os
-from typing import AsyncGenerator, Generator
+from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.pool import NullPool
 from httpx import AsyncClient, ASGITransport
-from fastapi import FastAPI
 
 from app.main import app
 from app.database import Base, get_db
-from app.core.config import settings
 
 # Override database URL for testing  
 TEST_DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost:5432/test_db")
 
-@pytest.fixture(scope="session")
-def event_loop() -> Generator:
-    """Create an instance of the default event loop for the test session."""
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
+# Create test engine at module level
+test_engine = create_async_engine(
+    TEST_DATABASE_URL,
+    poolclass=NullPool,
+    echo=False,
+)
 
-@pytest.fixture(scope="session")
-async def test_engine():
-    """Create a test database engine."""
-    engine = create_async_engine(
-        TEST_DATABASE_URL,
-        poolclass=NullPool,
-        echo=False,
-    )
-    yield engine
-    await engine.dispose()
+@pytest.fixture(scope="session", autouse=True)
+async def cleanup_engine():
+    """Cleanup the test engine after all tests."""
+    yield
+    await test_engine.dispose()
 
-@pytest.fixture(scope="function")
-async def test_db(test_engine) -> AsyncGenerator[AsyncSession, None]:
+@pytest.fixture
+async def test_db() -> AsyncGenerator[AsyncSession, None]:
     """Create test database tables and provide a database session."""
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
@@ -51,7 +43,7 @@ async def test_db(test_engine) -> AsyncGenerator[AsyncSession, None]:
         yield session
         await session.rollback()
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 async def client(test_db: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
     """Create a test client with overridden dependencies."""
     def override_get_db():
@@ -76,15 +68,10 @@ def test_user_data():
         "password": "testpassword123"
     }
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 async def authenticated_client(client: AsyncClient, test_user_data) -> AsyncGenerator[AsyncClient, None]:
     """Create an authenticated test client."""
-    # Note: In a real test scenario, this would require the auth service to be running
-    # For now, we'll create a mock authentication that sets a test user ID
-    # This fixture would need to be updated to work with the actual auth service
-    
     # Mock setting user ID for backend tests
-    # In integration tests, this would authenticate through the auth service
     test_user_id = "test-user-id-123"
     
     # Mock authorization by setting a header that the backend can recognize
