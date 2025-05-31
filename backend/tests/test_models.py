@@ -4,28 +4,28 @@ from sqlalchemy import select
 from datetime import datetime, timezone
 
 from app.models.user_profile import UserProfile
-from app.models.counter import Counter
+from app.models.counter import GlobalCounter
 
 @pytest.mark.asyncio
 async def test_counter_model_creation(test_db: AsyncSession):
-    """Test Counter model creation and default values."""
-    counter = Counter()
+    """Test GlobalCounter model creation and default values."""
+    counter = GlobalCounter()
     test_db.add(counter)
     await test_db.commit()
     await test_db.refresh(counter)
     
     assert counter.id == 1
     assert counter.count == 0
-    assert isinstance(counter.updated_at, datetime)
+    assert isinstance(counter.last_updated_at, datetime)
 
 @pytest.mark.asyncio
 async def test_counter_model_update(test_db: AsyncSession):
-    """Test Counter model update."""
-    counter = Counter()
+    """Test GlobalCounter model update."""
+    counter = GlobalCounter()
     test_db.add(counter)
     await test_db.commit()
     
-    initial_updated_at = counter.updated_at
+    initial_updated_at = counter.last_updated_at
     
     # Update count
     counter.count = 10
@@ -33,7 +33,7 @@ async def test_counter_model_update(test_db: AsyncSession):
     await test_db.refresh(counter)
     
     assert counter.count == 10
-    assert counter.updated_at > initial_updated_at
+    assert counter.last_updated_at > initial_updated_at
 
 @pytest.mark.asyncio
 async def test_user_profile_model_creation(test_db: AsyncSession):
@@ -82,14 +82,14 @@ async def test_user_profile_unique_constraint(test_db: AsyncSession):
 
 @pytest.mark.asyncio
 async def test_counter_singleton_behavior(test_db: AsyncSession):
-    """Test that Counter behaves as a singleton in the application logic."""
+    """Test that GlobalCounter behaves as a singleton in the application logic."""
     # Create first counter
-    counter1 = Counter()
+    counter1 = GlobalCounter()
     test_db.add(counter1)
     await test_db.commit()
     
     # Query for counters
-    result = await test_db.execute(select(Counter))
+    result = await test_db.execute(select(GlobalCounter))
     counters = result.scalars().all()
     
     assert len(counters) == 1

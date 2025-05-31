@@ -3,7 +3,7 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from app.models.counter import Counter
+from app.models.counter import GlobalCounter
 
 @pytest.mark.asyncio
 async def test_get_counter_initial(client: AsyncClient, test_db: AsyncSession):
@@ -14,7 +14,7 @@ async def test_get_counter_initial(client: AsyncClient, test_db: AsyncSession):
     assert data["count"] == 0
     
     # Verify in database
-    result = await test_db.execute(select(Counter))
+    result = await test_db.execute(select(GlobalCounter))
     counter = result.scalar_one()
     assert counter.count == 0
 
@@ -33,7 +33,7 @@ async def test_increment_counter(client: AsyncClient, test_db: AsyncSession):
     assert data["count"] == initial_count + 1
     
     # Verify in database
-    result = await test_db.execute(select(Counter))
+    result = await test_db.execute(select(GlobalCounter))
     counter = result.scalar_one()
     assert counter.count == initial_count + 1
 
