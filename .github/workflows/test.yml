@@ -102,7 +102,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
         ports:
-          - 5432:5432
+          - 5433:5432
     
     steps:
     - uses: actions/checkout@v4
@@ -121,7 +121,7 @@ jobs:
     - name: Run auth service tests
       working-directory: ./auth-service
       env:
-        TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_auth_db
+        TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5433/test_auth_db
         BETTER_AUTH_SECRET: test-auth-secret
       run: npm test
     
@@ -146,7 +146,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
         ports:
-          - 5432:5432
+          - 5434:5432
     
     steps:
     - uses: actions/checkout@v4
@@ -165,11 +165,12 @@ jobs:
       run: |
         cd frontend && npm ci && cd ..
         cd auth-service && npm ci && cd ..
-        cd backend && pip install -r requirements.txt && cd ..
+        cd backend && python -m pip install --upgrade pip && pip install -r requirements.txt && cd ..
     
     - name: Start services
       env:
-        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/integration_test_db
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5434/integration_test_db
+        TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5434/integration_test_db
         JWT_SECRET: integration-test-secret
         BETTER_AUTH_SECRET: integration-test-auth-secret
       run: |
@@ -181,11 +182,30 @@ jobs:
         cd backend && uvicorn app.main:app --host 0.0.0.0 --port 8000 &
         BACKEND_PID=$!
         
-        # Wait for services to be ready
-        sleep 10
+        # Wait for services to be ready with health checks
+        echo "Waiting for services to start..."
         
-        # Run integration tests (when implemented)
-        # For now, just check if services are running
+        # Wait for auth service (30 retries)
+        for i in {1..30}; do
+          if curl -f http://localhost:8787/auth/session > /dev/null 2>&1; then
+            echo "Auth service is ready"
+            break
+          fi
+          echo "Waiting for auth service... attempt $i/30"
+          sleep 2
+        done
+        
+        # Wait for backend service (30 retries)
+        for i in {1..30}; do
+          if curl -f http://localhost:8000/health > /dev/null 2>&1; then
+            echo "Backend service is ready"
+            break
+          fi
+          echo "Waiting for backend service... attempt $i/30"
+          sleep 2
+        done
+        
+        # Final health checks
         curl -f http://localhost:8787/auth/session || exit 1
         curl -f http://localhost:8000/health || exit 1
         
@@ -211,6 +231,7 @@ jobs:
     - name: Install linting tools
       run: |
         cd frontend && npm ci && cd ..
+        python -m pip install --upgrade pip
         pip install ruff black isort
     
     - name: Run frontend linting

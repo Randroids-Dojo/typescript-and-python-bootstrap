@@ -14,7 +14,7 @@ app.use(express.json());
 const auth = betterAuth({
   database: {
     provider: "pg",
-    connectionString: process.env.TEST_DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/test_auth_db'
+    connectionString: process.env.TEST_DATABASE_URL || 'postgresql://postgres:postgres@localhost:5433/test_auth_db'
   },
   emailAndPassword: {
     enabled: true,

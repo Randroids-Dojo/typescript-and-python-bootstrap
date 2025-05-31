@@ -1,5 +1,6 @@
 import pytest
 import asyncio
+import os
 from typing import AsyncGenerator, Generator
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.pool import NullPool
@@ -10,8 +11,8 @@ from app.main import app
 from app.database import Base, get_db
 from app.core.config import settings
 
-# Override database URL for testing
-TEST_DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost:5432/test_db"
+# Override database URL for testing  
+TEST_DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost:5432/test_db")
 
 @pytest.fixture(scope="session")
 def event_loop() -> Generator:

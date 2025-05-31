@@ -2,7 +2,7 @@ import { Pool } from 'pg';
 
 // Test database connection
 export const testPool = new Pool({
-  connectionString: process.env.TEST_DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/test_auth_db'
+  connectionString: process.env.TEST_DATABASE_URL || 'postgresql://postgres:postgres@localhost:5433/test_auth_db'
 });
 
 global.beforeAll(async () => {
