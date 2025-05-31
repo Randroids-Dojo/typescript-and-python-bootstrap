@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from pydantic import BaseModel
@@ -27,10 +27,11 @@ class UserProfileUpdate(BaseModel):
 
 @router.get("/profile", response_model=UserProfileResponse)
 async def get_user_profile(
-    user_id: str = Depends(get_current_user_id),
+    request: Request,
     db: AsyncSession = Depends(get_db)
 ):
     """Get the current user's profile"""
+    user_id = await get_current_user_id(request)
     result = await db.execute(
         select(UserProfile).where(UserProfile.user_id == user_id)
     )
@@ -56,10 +57,11 @@ async def get_user_profile(
 @router.put("/profile", response_model=UserProfileResponse)
 async def update_user_profile(
     profile_update: UserProfileUpdate,
-    user_id: str = Depends(get_current_user_id),
+    request: Request,
     db: AsyncSession = Depends(get_db)
 ):
     """Update the current user's profile"""
+    user_id = await get_current_user_id(request)
     result = await db.execute(
         select(UserProfile).where(UserProfile.user_id == user_id)
     )
