@@ -2,7 +2,8 @@ import request from 'supertest';
 import express from 'express';
 import cors from 'cors';
 import { betterAuth } from 'better-auth';
-import { testPool } from './setup';
+import { toNodeHandler } from 'better-auth/node';
+// import { testPool } from './setup';
 import './setup'; // Import setup for global test hooks
 
 // Create test app
@@ -14,7 +15,7 @@ app.use(express.json());
 const auth = betterAuth({
   database: {
     provider: "pg",
-    connectionString: process.env.TEST_DATABASE_URL || 'postgresql://postgres:postgres@localhost:5433/test_auth_db'
+    connectionString: process.env.TEST_DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/test_auth_db'
   },
   emailAndPassword: {
     enabled: true,
@@ -22,7 +23,14 @@ const auth = betterAuth({
   trustedOrigins: ["http://localhost:3000", "http://localhost:5173"],
 });
 
-app.all("/auth/*", auth.handler);
+const authHandler = toNodeHandler(auth);
+app.use((req, res, next) => {
+  if (req.path.startsWith("/auth/")) {
+    authHandler(req, res);
+    return;
+  }
+  next();
+});
 
 describe('Auth Service', () => {
   describe('POST /auth/sign-up/email', () => {
@@ -158,7 +166,7 @@ describe('Auth Service', () => {
 
       // Extract session cookie
       const cookies = signupResponse.headers['set-cookie'];
-      if (cookies) {
+      if (cookies && Array.isArray(cookies)) {
         const sessionCookie = cookies.find((cookie: string) => cookie.startsWith('auth.session'));
         if (sessionCookie) {
           sessionToken = sessionCookie.split(';')[0];
@@ -199,7 +207,7 @@ describe('Auth Service', () => {
 
       // Extract session cookie
       const cookies = signupResponse.headers['set-cookie'];
-      if (cookies) {
+      if (cookies && Array.isArray(cookies)) {
         const sessionCookie = cookies.find((cookie: string) => cookie.startsWith('auth.session'));
         if (sessionCookie) {
           sessionToken = sessionCookie.split(';')[0];
