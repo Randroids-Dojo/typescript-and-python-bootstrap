@@ -54,8 +54,8 @@ async def test_db(test_engine) -> AsyncGenerator[AsyncSession, None]:
 @pytest.fixture(scope="function")
 async def client(test_db: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
     """Create a test client with overridden dependencies."""
-    async def override_get_db():
-        yield test_db
+    def override_get_db():
+        return test_db
     
     app.dependency_overrides[get_db] = override_get_db
     
@@ -76,8 +76,8 @@ def test_user_data():
         "password": "testpassword123"
     }
 
-@pytest.fixture
-async def authenticated_client(client: AsyncClient, test_user_data) -> AsyncClient:
+@pytest.fixture(scope="function")
+async def authenticated_client(client: AsyncClient, test_user_data) -> AsyncGenerator[AsyncClient, None]:
     """Create an authenticated test client."""
     # Note: In a real test scenario, this would require the auth service to be running
     # For now, we'll create a mock authentication that sets a test user ID
@@ -90,4 +90,4 @@ async def authenticated_client(client: AsyncClient, test_user_data) -> AsyncClie
     # Mock authorization by setting a header that the backend can recognize
     client.headers["X-Test-User-ID"] = test_user_id
     
-    return client
+    yield client
