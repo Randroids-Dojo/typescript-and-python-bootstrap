@@ -1,6 +1,7 @@
 import request from 'supertest';
 import express from 'express';
 import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 import { betterAuth } from 'better-auth';
 import { toNodeHandler } from 'better-auth/node';
 // import { testPool } from './setup';
@@ -23,7 +24,17 @@ const auth = betterAuth({
   trustedOrigins: ["http://localhost:3000", "http://localhost:5173"],
 });
 
+// Rate limiting for auth endpoints
+const authRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs (higher for tests)
+  message: 'Too many authentication requests, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 const authHandler = toNodeHandler(auth);
+app.use('/auth', authRateLimit);
 app.use((req, res, next) => {
   if (req.path.startsWith("/auth/")) {
     authHandler(req, res);
