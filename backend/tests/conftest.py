@@ -11,6 +11,12 @@ from app.database import Base, get_db
 # Override database URL for testing  
 TEST_DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost:5432/test_db")
 
+# If DATABASE_URL uses psycopg2, convert to asyncpg
+if TEST_DATABASE_URL.startswith("postgresql://"):
+    TEST_DATABASE_URL = TEST_DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
+elif TEST_DATABASE_URL.startswith("postgres://"):
+    TEST_DATABASE_URL = TEST_DATABASE_URL.replace("postgres://", "postgresql+asyncpg://", 1)
+
 # Create test engine at module level
 test_engine = create_async_engine(
     TEST_DATABASE_URL,
