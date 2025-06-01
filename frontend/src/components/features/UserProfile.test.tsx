@@ -141,7 +141,7 @@ describe('UserProfile', () => {
       }
     })
     
-    let resolveUpdate: any
+    let resolveUpdate: (value: { data: { bio: string | null; display_name: string | null } }) => void
     vi.mocked(userApi.updateProfile).mockImplementationOnce(
       () => new Promise(resolve => { resolveUpdate = resolve })
     )

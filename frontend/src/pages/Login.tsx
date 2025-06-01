@@ -84,10 +84,11 @@ export default function Login() {
       setTimeout(() => {
         navigate("/dashboard")
       }, 100)
-    } catch (err: any) {
+    } catch (err) {
       // This might not be reached if Better Auth returns errors as responses
       console.error("Login error:", err)
-      setError(err.message || "Failed to sign in. Please try again.")
+      const message = err instanceof Error ? err.message : "Failed to sign in. Please try again."
+      setError(message)
     } finally {
       setIsLoading(false)
     }

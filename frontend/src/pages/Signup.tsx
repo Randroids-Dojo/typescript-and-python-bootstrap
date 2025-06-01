@@ -79,14 +79,31 @@ export default function Signup() {
       navigate("/login", { 
         state: { message: "Account created successfully! Please log in." } 
       })
-    } catch (err: any) {
+    } catch (err) {
       console.error("Signup error full details:", err)
-      console.error("Error response:", err.response)
-      console.error("Error data:", err.response?.data)
+      
+      // Type guard for error handling
+      const error = err as { 
+        code?: string; 
+        message?: string; 
+        response?: { 
+          data?: { 
+            code?: string; 
+            message?: string 
+          } 
+        }; 
+        error?: { 
+          code?: string; 
+          message?: string 
+        } 
+      }
+      
+      console.error("Error response:", error.response)
+      console.error("Error data:", error.response?.data)
       
       // Check different error formats
-      const errorCode = err.code || err.response?.data?.code || err.error?.code
-      const errorMessage = err.message || err.response?.data?.message || err.error?.message
+      const errorCode = error.code || error.response?.data?.code || error.error?.code
+      const errorMessage = error.message || error.response?.data?.message || error.error?.message
       
       alert("ERROR CODE: " + errorCode + ", MESSAGE: " + errorMessage)
       

@@ -120,7 +120,7 @@ describe('GlobalCounter', () => {
       } 
     })
     
-    let resolveIncrement: any
+    let resolveIncrement: (value: { data: { count: number; last_updated_by: string; last_updated_at: string } }) => void
     vi.mocked(counterApi.incrementCounter).mockImplementationOnce(
       () => new Promise(resolve => { resolveIncrement = resolve })
     )
