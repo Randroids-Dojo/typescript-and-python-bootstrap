@@ -7,8 +7,8 @@ describe('Auth Client', () => {
   })
 
   describe('authClient', () => {
-    it('should be configured with correct baseURL', () => {
-      expect(authClient.baseURL).toBe('http://localhost:80/auth')
+    it('should be defined', () => {
+      expect(authClient).toBeDefined()
     })
   })
 

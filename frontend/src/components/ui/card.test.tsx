@@ -14,8 +14,8 @@ describe('Card Components', () => {
     })
 
     it('applies correct classes', () => {
-      render(<Card className="custom-card">Content</Card>)
-      const card = screen.getByText('Content').parentElement
+      const { container } = render(<Card className="custom-card" data-testid="card">Content</Card>)
+      const card = container.querySelector('[data-testid="card"]')
       expect(card).toHaveClass('custom-card')
       expect(card).toHaveClass('rounded-lg', 'border', 'bg-card')
     })
