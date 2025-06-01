@@ -13,12 +13,11 @@ async_database_url = database_url.replace("postgresql://", "postgresql+asyncpg:/
 engine = create_async_engine(async_database_url, echo=True)
 
 # Async session
-AsyncSessionLocal = sessionmaker(
-    engine, class_=AsyncSession, expire_on_commit=False
-)
+AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 # Base class for models
 Base = declarative_base()
+
 
 # Dependency to get database session
 async def get_db():

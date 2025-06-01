@@ -19,50 +19,45 @@ class CounterResponse(BaseModel):
 @router.get("", response_model=CounterResponse)
 async def get_counter(db: AsyncSession = Depends(get_db)):
     """Get the current global counter value"""
-    result = await db.execute(
-        select(GlobalCounter).where(GlobalCounter.id == 1)
-    )
+    result = await db.execute(select(GlobalCounter).where(GlobalCounter.id == 1))
     counter = result.scalar_one_or_none()
-    
+
     if not counter:
         # Initialize counter if it doesn't exist
         counter = GlobalCounter(id=1, count=0)
         db.add(counter)
         await db.commit()
         await db.refresh(counter)
-    
+
     return CounterResponse(
         count=counter.count,
         last_updated_by=counter.last_updated_by,
-        last_updated_at=counter.last_updated_at.isoformat()
+        last_updated_at=counter.last_updated_at.isoformat(),
     )
 
 
 @router.post("/increment", response_model=CounterResponse)
 async def increment_counter(
-    user_id: str = Depends(get_current_user_id),
-    db: AsyncSession = Depends(get_db)
+    user_id: str = Depends(get_current_user_id), db: AsyncSession = Depends(get_db)
 ):
     """Increment the global counter (requires authentication)"""
-    result = await db.execute(
-        select(GlobalCounter).where(GlobalCounter.id == 1)
-    )
+    result = await db.execute(select(GlobalCounter).where(GlobalCounter.id == 1))
     counter = result.scalar_one_or_none()
-    
+
     if not counter:
         # Initialize counter if it doesn't exist
         counter = GlobalCounter(id=1, count=0)
         db.add(counter)
-    
+
     # Increment counter
     counter.count += 1
     counter.last_updated_by = user_id
-    
+
     await db.commit()
     await db.refresh(counter)
-    
+
     return CounterResponse(
         count=counter.count,
         last_updated_by=counter.last_updated_by,
-        last_updated_at=counter.last_updated_at.isoformat()
+        last_updated_at=counter.last_updated_at.isoformat(),
     )
