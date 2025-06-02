@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -40,11 +40,7 @@ export function UserProfile() {
     },
   })
 
-  useEffect(() => {
-    loadProfile()
-  }, [])
-
-  async function loadProfile() {
+  const loadProfile = useCallback(async () => {
     try {
       const response = await userApi.getProfile()
       const profile = response.data
@@ -57,7 +53,11 @@ export function UserProfile() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [form])
+
+  useEffect(() => {
+    loadProfile()
+  }, [loadProfile])
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setMessage(null)
@@ -67,7 +67,7 @@ export function UserProfile() {
       await userApi.updateProfile(values)
       setMessage("Profile updated successfully!")
       setTimeout(() => setMessage(null), 3000)
-    } catch (error) {
+    } catch {
       setMessage("Failed to update profile")
     } finally {
       setIsSaving(false)

@@ -13,9 +13,9 @@ async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
         # Create tables
         await conn.run_sync(Base.metadata.create_all)
-    
+
     yield
-    
+
     # Shutdown
     await engine.dispose()
 
@@ -25,7 +25,7 @@ app = FastAPI(
     lifespan=lifespan,
     docs_url=f"{settings.API_PREFIX}/docs",
     redoc_url=f"{settings.API_PREFIX}/redoc",
-    openapi_url=f"{settings.API_PREFIX}/openapi.json"
+    openapi_url=f"{settings.API_PREFIX}/openapi.json",
 )
 
 # Configure CORS
