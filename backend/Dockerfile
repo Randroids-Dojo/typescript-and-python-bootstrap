@@ -1,5 +1,5 @@
 # Development stage
-FROM python:3.13-slim AS development
+FROM python:3.13.7-slim AS development
 
 WORKDIR /app
 
@@ -24,7 +24,7 @@ EXPOSE 8000
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 
 # Production stage
-FROM python:3.13-slim AS production
+FROM python:3.13.7-slim AS production
 
 WORKDIR /app
 
